@@ -2,7 +2,7 @@
 
 ## Inhoudstafel
 - [Team](#Team)
-- [Goal](#Goal)
+- [The assignment](#The-assignment)
 - [Posters](#Posters)
 
 ## Team
@@ -12,6 +12,7 @@
 - [<img src="https://github.com/TimoPlts.png" alt="" width="25" style="margin-bottom:-6px;">Timo Plets](https://github.com/TimoPlts)
 - [<img src="https://github.com/ondrejkozel.png" alt="" width="25" style="margin-bottom:-6px;">Ondřej Kozel](https://github.com/ondrejkozel)
 
-## Goal
+## The assignment
+The project involves the design and realization of a physical Tetris arcade within a custom-built housing. The classic game is displayed on a grid-based LED game board, where each individual LED represents a single block of the game. The arcade is designed to be versatile, allowing it to be mounted on a wall or, ideally, stand autonomously on a table.
 
 ## Posters
