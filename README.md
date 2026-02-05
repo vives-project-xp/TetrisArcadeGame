@@ -16,3 +16,7 @@
 The project involves the design and realization of a physical Tetris arcade within a custom-built housing. The classic game is displayed on a grid-based LED game board, where each individual LED represents a single block of the game. The arcade is designed to be versatile, allowing it to be mounted on a wall or, ideally, stand autonomously on a table.
 
 ## Posters
+<div style="display: flex; gap: 10px;">
+   <img src="Posters/Tetris%20Arcade%20game%20poster.png" height="auto" width="350">
+   <img src="Posters/Tetris%20Arcade%20game%20poster%20EN.png" width="350">
+</div>
