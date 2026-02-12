@@ -17,6 +17,6 @@ The project involves the design and realization of a physical Tetris arcade with
 
 ## Posters
 <div style="display: flex; gap: 10px;">
-   <img src="Posters/Tetris%20Arcade%20game%20poster.png" height="auto" width="350">
-   <img src="Posters/Tetris%20Arcade%20game%20poster%20EN.png" width="350">
+   <img src="Documentation/Posters/Tetris%20Arcade%20game%20poster.png" height="auto" width="350">
+   <img src="Documentation/Posters/Tetris%20Arcade%20game%20poster%20EN.png" width="350">
 </div>
