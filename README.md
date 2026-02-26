@@ -20,3 +20,7 @@ The project involves the design and realization of a physical Tetris arcade with
    <img src="Documentation/Posters/Tetris%20Arcade%20game%20poster.png" height="auto" width="350">
    <img src="Documentation/Posters/Tetris%20Arcade%20game%20poster%20EN.png" width="350">
 </div>
+
+## Folder structure
+- [Documentation](./Documentation/README.md) : Here you will find everything about the documentation
+- [Code](./src/led_strip_demo) : Here you will find everthing off the code
