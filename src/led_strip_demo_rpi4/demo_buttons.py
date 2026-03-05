@@ -1,15 +1,17 @@
 import time
 
+import neopixel
 import board
-import neopixel_spi
 import RPi.GPIO as GPIO
 
-PIXEL_COUNT = 50
+PIXEL_COUNT = 230
+
 DOT_COLOR = (0, 0, 255)
 BTN_LEFT_PIN = 26
 BTN_RIGHT_PIN = 20
 
-pixels = neopixel_spi.NeoPixel_SPI(board.SPI(), PIXEL_COUNT, pixel_order='GRBW', auto_write=False)
+LED_DATA_PIN = board.D10
+pixels = neopixel.NeoPixel(LED_DATA_PIN, PIXEL_COUNT, pixel_order='GRBW', auto_write=False)
 dot_loc = PIXEL_COUNT // 2
 
 def refresh_dot():
@@ -39,9 +41,6 @@ def demo():
     GPIO.setup(BTN_RIGHT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     pixels.fill(0)
     pixels.show()
-    # GPIO.wait_for_edge(BTN_LEFT_PIN, GPIO.FALLING)
-    # GPIO.add_event_detect(BTN_LEFT_PIN, GPIO.FALLING)
-    # GPIO.add_event_detect(BTN_RIGHT_PIN, GPIO.FALLING, callback=move_dot_right, bouncetime=100)
     refresh_dot()
 
     try:
@@ -52,7 +51,7 @@ def demo():
                 move_dot_left()
             if GPIO.input(BTN_RIGHT_PIN) == GPIO.LOW:
                 move_dot_right()
-            time.sleep(0.01)
+            time.sleep(0.005)
 
     except KeyboardInterrupt:
         pixels.deinit()
