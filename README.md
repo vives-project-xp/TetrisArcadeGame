@@ -4,6 +4,7 @@
 - [Team](#Team)
 - [The assignment](#The-assignment)
 - [Posters](#Posters)
+- [Folder structure](#Folder-structure)
 
 ## Team
 - [<img src="https://github.com/Danaezutterman.png" alt="" width="25" style="margin-bottom:-6px;">Danae Zutterman](https://github.com/Danaezutterman)
