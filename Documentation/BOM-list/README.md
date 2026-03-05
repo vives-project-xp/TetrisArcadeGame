@@ -13,3 +13,5 @@
 | 1 | **Rocker Switch** | Tinytronics | 210 | € 0,50 | [Link](https://www.tinytronics.nl/en/switches/manual-switches/rocker-switches/standaard-built-in-rocker-switch-normal) |
 | 1 | **Black Push Button** | Tinytronics | 795 | € 2,50 | [Link](https://www.tinytronics.nl/en/switches/manual-switches/push-buttons-and-switches/black-push-button-16mm-reset) |
 | 1 | **Vynex Meubelscharnier** | Brico | 5473366 | € 4,99 | [Link](https://www.brico.be/nl/ijzerwaren/meubelbeslag/meubelscharnieren/kogelscharnieren/vynex-meubelscharnier-verzinkt-staal-30x19-mm-4-stuks/5473366) |
+| --- | --- | --- | --- | --- | --- |
+| **Total** | | | | | **€ 170.10** |
