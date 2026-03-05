@@ -1,0 +1,20 @@
+"""Enumerations for game console controls. Will be extended later."""
+
+from enum import Enum
+
+
+class ControlsState(Enum):
+    """Enumeration for control states"""
+    BTN_START_HOLD = "BTN_START_HOLD"
+    BTN_DOWN_HOLD = "BTN_DOWN_HOLD"
+    BTN_RIGHT_HOLD = "BTN_RIGHT_HOLD"
+
+
+class ControlsEvent(Enum):
+    """Enumeration for control events"""
+    BTN_START_PRESSED = "BTN_START_PRESSED"
+    BTN_START_RELEASED = "BTN_START_RELEASED"
+    BTN_DOWN_PRESSED = "BTN_DOWN_PRESSED"
+    BTN_DOWN_RELEASED = "BTN_DOWN_RELEASED"
+    BTN_RIGHT_PRESSED = "BTN_RIGHT_PRESSED"
+    BTN_RIGHT_RELEASED = "BTN_RIGHT_RELEASED"
