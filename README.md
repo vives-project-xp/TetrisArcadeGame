@@ -23,4 +23,4 @@ The project involves the design and realization of a physical Tetris arcade with
 
 ## Folder structure
 - [Documentation](./Documentation/README.md) : Here you will find everything about the documentation
-- [Demo](./src/led_strip_demo) : Here you will find everthing off the code
+- [Demo](./src) : Here you will find everthing off the code
