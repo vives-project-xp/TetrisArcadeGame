@@ -12,20 +12,20 @@ LED_BRIGHTNESS = 1.0
 
 # GPIO pin mappings for physical buttons (BCM)
 BUTTON_GPIO_MAPPING = {
-    17: ControlsState.BTN_UP_HOLD,
-    27: ControlsState.BTN_DOWN_HOLD,
-    22: ControlsState.BTN_LEFT_HOLD,
-    23: ControlsState.BTN_RIGHT_HOLD,
+    # 17: ControlsState.BTN_UP_HOLD,
+    # 27: ControlsState.BTN_DOWN_HOLD,
+    26: ControlsState.BTN_LEFT_HOLD,
+    20: ControlsState.BTN_RIGHT_HOLD,
 }
 
 # Keyboard to controls mapping
 KEYBOARD_MAPPING = {
-    'w': ControlsState.BTN_UP_HOLD,
-    'a': ControlsState.BTN_LEFT_HOLD,
-    's': ControlsState.BTN_DOWN_HOLD,
-    'd': ControlsState.BTN_RIGHT_HOLD,
-    'enter': ControlsState.BTN_START_HOLD,
-    'return': ControlsState.BTN_START_HOLD,
+    # 'w': ControlsState.BTN_UP_HOLD,
+    # 'a': ControlsState.BTN_LEFT_HOLD,
+    # 's': ControlsState.BTN_DOWN_HOLD,
+    # 'd': ControlsState.BTN_RIGHT_HOLD,
+    # 'enter': ControlsState.BTN_START_HOLD,
+    # 'return': ControlsState.BTN_START_HOLD,
 }
 
 # Audio settings

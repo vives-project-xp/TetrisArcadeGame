@@ -1,5 +1,8 @@
 from typing import List, Set, Dict, Callable
-from console.controls import ControlsState, ControlsEvent
+
+from RPi import GPIO
+import config
+from console.controls import ControlsState, ControlsEvent, control_state_to_event
 import time
 
 
@@ -10,7 +13,8 @@ class InputManager:
     """
     
     def __init__(self) -> None:
-        """Initialize the input manager."""
+        self.init_physical_buttons(config.BUTTON_GPIO_MAPPING)
+        self.init_keyboard_mapping()
         pass
     
     def init_physical_buttons(self, gpio_pin_mapping: Dict[int, ControlsState]) -> None:
@@ -20,7 +24,11 @@ class InputManager:
         Args:
             gpio_pin_mapping: Mapping of GPIO pins to ControlsState
         """
-        pass
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(True)
+        for pin_id, controls_state in gpio_pin_mapping:
+            GPIO.setup(pin_id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.add_event_detect(pin_id, GPIO.FALLING)
     
     def init_keyboard_mapping(self, key_mapping: Dict[str, ControlsState]) -> None:
         """
@@ -39,7 +47,7 @@ class InputManager:
     def stop_keyboard_listener(self) -> None:
         """Stop listening for keyboard events."""
         pass
-    
+
     def poll_inputs(self) -> List[ControlsEvent]:
         """
         Poll all input sources and return control events.
@@ -47,7 +55,13 @@ class InputManager:
         Returns:
             List of ControlsEvent that occurred since last poll
         """
-        pass
+        result = []
+        for pin_id, controls_state in config.BUTTON_GPIO_MAPPING:
+            if GPIO.event_detected(pin_id):
+                result.append(control_state_to_event(controls_state, True))
+                #TODO continue here, also detect releases
+        
+        return result
     
     def get_current_states(self) -> Set[ControlsState]:
         """
@@ -72,18 +86,9 @@ class InputManager:
         pass
     
     def translate_button_to_event(self, gpio_pin: int, pressed: bool) -> ControlsEvent:
-        """
-        Translate physical button input to control event.
-        
-        Args:
-            gpio_pin: The GPIO pin number
-            pressed: True if pressed, False if released
-            
-        Returns:
-            Corresponding ControlsEvent
-        """
-        pass
+        return control_state_to_event(config.BUTTON_GPIO_MAPPING.get(gpio_pin), pressed)
     
     def cleanup(self) -> None:
         """Clean up GPIO and keyboard listeners."""
+        GPIO.cleanup()
         pass

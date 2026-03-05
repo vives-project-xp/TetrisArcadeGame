@@ -1,6 +1,8 @@
+import time
 from typing import List, Optional, Set
 from console.controls import ControlsState, ControlsEvent
 from cartridges.base_cartridge import GameCartridge
+from console.input_manager import InputManager
 
 
 class GameConsole:
@@ -8,12 +10,20 @@ class GameConsole:
     Main game console class that manages display, input, audio, and cartridges.
     
     """
-    
-    def clearAll(self) -> None:
+
+    def __init__(self):
+        """Initializes the game console."""
+        self.__input_manager = InputManager()
+        while True:
+            print(self.__input_manager.poll_inputs())
+            time.sleep(0.5)
+            # TODO continue here
+
+    def clear_all(self) -> None:
         """Clear all displays."""
         pass
     
-    def drawMainDisplay(self, rgbll: List[List[tuple]]) -> None:
+    def draw_main_display(self, rgbll: List[List[tuple]]) -> None:
         """
         Draw to the main LED matrix display.
         
@@ -22,7 +32,7 @@ class GameConsole:
         """
         pass
     
-    def drawSecondaryDisplay(self, rgbll: List[List[tuple]]) -> None:
+    def draw_secondary_display(self, rgbll: List[List[tuple]]) -> None:
         """
         Draw to a secondary display.
         
@@ -31,7 +41,7 @@ class GameConsole:
         """
         pass
     
-    def setSegmentDisplayText(self, text: str) -> None:
+    def set_segment_display_text(self, text: str) -> None:
         """
         Set text on a seven segment display.
         
@@ -40,7 +50,7 @@ class GameConsole:
         """
         pass
     
-    def insertCartridge(self, cartridge: GameCartridge) -> None:
+    def insert_cartridge(self, cartridge: GameCartridge) -> None:
         """
         Insert a game cartridge into the console.
         
@@ -49,19 +59,16 @@ class GameConsole:
         """
         pass
     
-    def isControlState(self, controls_state: ControlsState) -> bool:
+    def get_active_control_states(self) -> Set[ControlsState]:
         """
-        Check if a control is in a specific state.
+        Gets the currently acive controls.
         
-        Args:
-            controls_state: The control state to check
-            
         Returns:
-            True if the control is in the specified state, False otherwise
+            Set of currently active ControlsState
         """
-        pass
+        return self.__input_manager.get_current_states()
     
-    def playSound(self, sound_title: str) -> None:
+    def play_sound(self, sound_title: str) -> None:
         """
         Play a sound effect.
         
