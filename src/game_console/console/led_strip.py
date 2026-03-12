@@ -1,4 +1,6 @@
 from typing import List, Tuple
+import board
+import neopixel
 
 
 class LEDStrip:
@@ -6,22 +8,33 @@ class LEDStrip:
     
     def __init__(self, length: int, gpio_pin: int) -> None:
         """
-        Initialize LED matrix.
+        Initialize LED strip.
         Args:
             length: led strip length
             gpio_pin: GPIO pin for data line
         """
         self.__length = length
-
-        pass
+        self.__gpio_pin = gpio_pin
+        self.strip = None
     
     def init_hardware(self) -> None:
         """Initialize the LED strip hardware (rpi_ws281x library)."""
-        pass
-    
+        pin = getattr(board, f"D{self.__gpio_pin}")
+        self.strip = neopixel.NeoPixel(
+            pin, 
+            self.__length, 
+            pixel_order='GRBW', 
+            auto_write=False
+        )
+
+        self.strip.fill(0)
+        self.strip.show()
+
     def clear(self) -> None:
         """Turn off all LEDs."""
-        pass
+        if self.strip:
+            self.strip.fill(0)
+            self.strip.show()
     
     def set_pixel(self, i: int, color: Tuple[int, int, int]) -> None:
         """
@@ -32,6 +45,10 @@ class LEDStrip:
             color: RGB tuple
         """
         pass
+
+    def show(self) -> None:
+        """Update the LED strip to show changes."""
+        self.strip.show()
     
     def cleanup(self) -> None:
         """Clean up resources."""
