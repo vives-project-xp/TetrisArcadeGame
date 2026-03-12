@@ -44,11 +44,13 @@ class LEDStrip:
             i: coordinate
             color: RGB tuple
         """
-        pass
+        if self.strip and 0 <= i < self.__length:
+            self.strip[i] = color
 
     def show(self) -> None:
         """Update the LED strip to show changes."""
-        self.strip.show()
+        if self.strip:
+            self.strip.show()
     
     def cleanup(self) -> None:
         """Clean up resources."""
