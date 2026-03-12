@@ -35,5 +35,5 @@ def control_state_to_event(state: ControlsState, pressed: bool) -> ControlsEvent
         The corresponding ControlsEvent
     """
     suffix = "PRESSED" if pressed else "RELEASED"
-    event_name = state.value.replace("_HOLD", f"_{suffix}")
-    return ControlsEvent(event_name)
+    event_name = state.name.replace("_HOLD", f"_{suffix}")
+    return ControlsEvent[event_name]

@@ -4,8 +4,8 @@ import time
 import board
 import neopixel
 
-PIXEL_COUNT = 230
-SNAKE_LEN = 5
+PIXEL_COUNT = 20
+SNAKE_LEN = 2
 
 LED_DATA_PIN = board.D10
 
@@ -15,7 +15,7 @@ pixels.show()
 
 color = (100, 100, 100)
 
-target_fps = 100
+target_fps = 15
 frame_duration = 1.0 / target_fps
 last_time = time.perf_counter()
 
@@ -45,8 +45,7 @@ def demo():
                 update_pixels(n)
                 if up:
                     n = n + 1
-                    max = (PIXEL_COUNT - SNAKE_LEN - 1)
-                    if n == (PIXEL_COUNT - SNAKE_LEN - 1):
+                    if n == (PIXEL_COUNT - SNAKE_LEN):
                         up = False
                 elif up == False:
                     n = n - 1

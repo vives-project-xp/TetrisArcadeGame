@@ -4,7 +4,7 @@ import neopixel
 import board
 import RPi.GPIO as GPIO
 
-PIXEL_COUNT = 230
+PIXEL_COUNT = 10
 
 DOT_COLOR = (0, 0, 255)
 BTN_LEFT_PIN = 26
@@ -51,7 +51,7 @@ def demo():
                 move_dot_left()
             if GPIO.input(BTN_RIGHT_PIN) == GPIO.LOW:
                 move_dot_right()
-            time.sleep(0.005)
+            time.sleep(0.1)
 
     except KeyboardInterrupt:
         pixels.deinit()

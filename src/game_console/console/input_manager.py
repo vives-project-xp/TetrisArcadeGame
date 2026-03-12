@@ -1,9 +1,11 @@
-from typing import List, Set, Dict, Callable
+from typing import List, Set, Dict
+import threading
 
 from RPi import GPIO
 import config
 from console.controls import ControlsState, ControlsEvent, control_state_to_event
-import time
+
+BOUNCE_TIME_MS = 50
 
 
 class InputManager:
@@ -13,8 +15,10 @@ class InputManager:
     """
     
     def __init__(self) -> None:
+        self.__btn_updates = []
+        self.__btn_updates_lock = threading.Lock()
         self.init_physical_buttons(config.BUTTON_GPIO_MAPPING)
-        self.init_keyboard_mapping()
+        self.init_keyboard_mapping(config.KEYBOARD_MAPPING)
         pass
     
     def init_physical_buttons(self, gpio_pin_mapping: Dict[int, ControlsState]) -> None:
@@ -26,9 +30,9 @@ class InputManager:
         """
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(True)
-        for pin_id, controls_state in gpio_pin_mapping:
+        for pin_id in gpio_pin_mapping:
             GPIO.setup(pin_id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(pin_id, GPIO.FALLING)
+            GPIO.add_event_detect(pin_id, GPIO.BOTH, callback=self._btn_callback, bouncetime=BOUNCE_TIME_MS)
     
     def init_keyboard_mapping(self, key_mapping: Dict[str, ControlsState]) -> None:
         """
@@ -48,6 +52,12 @@ class InputManager:
         """Stop listening for keyboard events."""
         pass
 
+    def _btn_callback(self, channel) -> None:
+        pressed = GPIO.input(channel) == GPIO.LOW
+        event = self.translate_button_to_event(channel, pressed)
+        with self.__btn_updates_lock:
+            self.__btn_updates.append(event)
+
     def poll_inputs(self) -> List[ControlsEvent]:
         """
         Poll all input sources and return control events.
@@ -55,12 +65,9 @@ class InputManager:
         Returns:
             List of ControlsEvent that occurred since last poll
         """
-        result = []
-        for pin_id, controls_state in config.BUTTON_GPIO_MAPPING:
-            if GPIO.event_detected(pin_id):
-                result.append(control_state_to_event(controls_state, True))
-                #TODO continue here, also detect releases
-        
+        with self.__btn_updates_lock:
+            result = self.__btn_updates.copy()
+            self.__btn_updates.clear()
         return result
     
     def get_current_states(self) -> Set[ControlsState]:
@@ -89,6 +96,5 @@ class InputManager:
         return control_state_to_event(config.BUTTON_GPIO_MAPPING.get(gpio_pin), pressed)
     
     def cleanup(self) -> None:
-        """Clean up GPIO and keyboard listeners."""
         GPIO.cleanup()
         pass

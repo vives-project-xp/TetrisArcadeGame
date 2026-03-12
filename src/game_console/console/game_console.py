@@ -14,10 +14,17 @@ class GameConsole:
     def __init__(self):
         """Initializes the game console."""
         self.__input_manager = InputManager()
-        while True:
-            print(self.__input_manager.poll_inputs())
-            time.sleep(0.5)
-            # TODO continue here
+    
+    def run(self):
+        """Starts the game console and game loop."""
+        try:
+            while True:
+                controls_update = self.__input_manager.poll_inputs()
+                if controls_update:
+                    print(controls_update)
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            self.__input_manager.cleanup()
 
     def clear_all(self) -> None:
         """Clear all displays."""
