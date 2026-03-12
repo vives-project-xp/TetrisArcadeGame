@@ -18,16 +18,6 @@ BUTTON_GPIO_MAPPING = {
     20: ControlsState.BTN_RIGHT_HOLD,
 }
 
-# Keyboard to controls mapping
-KEYBOARD_MAPPING = {
-    # 'w': ControlsState.BTN_UP_HOLD,
-    # 'a': ControlsState.BTN_LEFT_HOLD,
-    # 's': ControlsState.BTN_DOWN_HOLD,
-    # 'd': ControlsState.BTN_RIGHT_HOLD,
-    # 'enter': ControlsState.BTN_START_HOLD,
-    # 'return': ControlsState.BTN_START_HOLD,
-}
-
 # Audio settings
 AUDIO_ASSETS_PATH = "assets/sounds/"
 AUDIO_SAMPLE_RATE = 22050

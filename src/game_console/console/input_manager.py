@@ -10,7 +10,7 @@ BOUNCE_TIME_MS = 50
 
 class InputManager:
     """
-    Manages input from physical buttons and keyboard.
+    Manages input from physical buttons.
     Translates inputs to ControlsEvent and ControlsState.
     """
     
@@ -18,7 +18,6 @@ class InputManager:
         self.__btn_updates = []
         self.__btn_updates_lock = threading.Lock()
         self.init_physical_buttons(config.BUTTON_GPIO_MAPPING)
-        self.init_keyboard_mapping(config.KEYBOARD_MAPPING)
         pass
     
     def init_physical_buttons(self, gpio_pin_mapping: Dict[int, ControlsState]) -> None:
@@ -33,24 +32,6 @@ class InputManager:
         for pin_id in gpio_pin_mapping:
             GPIO.setup(pin_id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(pin_id, GPIO.BOTH, callback=self._btn_callback, bouncetime=BOUNCE_TIME_MS)
-    
-    def init_keyboard_mapping(self, key_mapping: Dict[str, ControlsState]) -> None:
-        """
-        Initialize keyboard to controls mapping.
-        
-        Args:
-            key_mapping: Mapping of keyboard keys to ControlsState
-                        e.g., {'w': ControlsState.BTN_UP_HOLD, ...}
-        """
-        pass
-    
-    def start_keyboard_listener(self) -> None:
-        """Start listening for keyboard events."""
-        pass
-    
-    def stop_keyboard_listener(self) -> None:
-        """Stop listening for keyboard events."""
-        pass
 
     def _btn_callback(self, channel) -> None:
         pressed = GPIO.input(channel) == GPIO.LOW
@@ -76,19 +57,6 @@ class InputManager:
         
         Returns:
             Set of currently active ControlsState
-        """
-        pass
-    
-    def translate_keyboard_to_event(self, key: str, pressed: bool) -> ControlsEvent:
-        """
-        Translate keyboard input to control event.
-        
-        Args:
-            key: The keyboard key
-            pressed: True if pressed, False if released
-            
-        Returns:
-            Corresponding ControlsEvent
         """
         pass
     

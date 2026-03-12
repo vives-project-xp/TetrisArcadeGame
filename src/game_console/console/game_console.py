@@ -1,4 +1,5 @@
 import time
+import config
 from typing import List, Optional, Set
 from console.controls import ControlsState, ControlsEvent
 from cartridges.base_cartridge import GameCartridge
@@ -22,7 +23,7 @@ class GameConsole:
                 controls_update = self.__input_manager.poll_inputs()
                 if controls_update:
                     print(controls_update)
-                time.sleep(0.1)
+                time.sleep(config.FRAME_TIME)
         except KeyboardInterrupt:
             self.__input_manager.cleanup()
 
