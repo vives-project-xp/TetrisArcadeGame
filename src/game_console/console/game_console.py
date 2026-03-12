@@ -15,16 +15,19 @@ class GameConsole:
     def __init__(self):
         """Initializes the game console."""
         self.__input_manager = InputManager()
+        self.__game_cartridge = None
     
     def run(self):
         """Starts the game console and game loop."""
+        if not self.__game_cartridge:
+            return None
         try:
             while True:
                 controls_update = self.__input_manager.poll_inputs()
-                if controls_update:
-                    print(controls_update)
+                self.__game_cartridge.tick(time.perf_counter(), controls_update)
                 time.sleep(config.FRAME_TIME)
         except KeyboardInterrupt:
+            self.insert_cartridge(None)
             self.__input_manager.cleanup()
 
     def clear_all(self) -> None:
@@ -65,7 +68,11 @@ class GameConsole:
         Args:
             cartridge: GameCartridge instance to insert
         """
-        pass
+        if self.__game_cartridge:
+            self.__game_cartridge.deinit()
+        self.clear_all()
+        if cartridge:
+            self.__game_cartridge = cartridge
     
     def get_active_control_states(self) -> Set[ControlsState]:
         """
