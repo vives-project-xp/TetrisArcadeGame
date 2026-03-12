@@ -1,4 +1,9 @@
 # 3d-prints
 
-Hier kunnen jullie alle files vinden 
-Hier kunnen jullie alles vinden om de behuizing stap voor stap te maken voor te lasercutten en alles in elkaar te steken.
+Hier kunnen jullie alle files vinden om de hoekjes te 3d-printen.
+
+## Dubbel hoekje
+Hier kunnen jullie een hoekje vinden om met 4 vijzen vast te maken.
+
+## Enkel hoekje
+Hier kunnen jullie een hoekje vinden om met 2 vijzen vast te maken.
