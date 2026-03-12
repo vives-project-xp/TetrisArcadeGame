@@ -1,18 +1,20 @@
 from typing import List, Tuple
 
 
-class LEDMatrix:
+class LEDStrip:
     """Driver for LED strip matrix"""
     
     def __init__(self, width: int, height: int, gpio_pin: int) -> None:
         """
         Initialize LED matrix.
-        
         Args:
             width: Matrix width (number of LEDs)
             height: Matrix height (number of LEDs)
             gpio_pin: GPIO pin for data line (default: 18 for PWM)
         """
+        self.width = width
+        self.height = height
+
         pass
     
     def init_hardware(self) -> None:
@@ -46,7 +48,7 @@ class LEDMatrix:
         """
         pass
     
-    def draw(self, rgbll: List[List[Tuple[int, int, int]]]) -> None:
+    def draw(self, rgbll: List[List[Tuple[int, int, int]]], offset: int = (0, 0)) -> None:
         """
         Draw the entire matrix from a 2D list.
         
@@ -57,4 +59,6 @@ class LEDMatrix:
     
     def cleanup(self) -> None:
         """Clean up resources."""
-        pass
+        if self.strip:
+            self.strip._cleanup()
+            self.strip = None
