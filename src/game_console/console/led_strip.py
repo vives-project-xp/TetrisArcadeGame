@@ -15,20 +15,18 @@ class LEDStrip:
         """
         self.__length = length
         self.__gpio_pin = gpio_pin
-        self.strip = None
+        self.__init_hardware()
     
-    def init_hardware(self) -> None:
-        """Initialize the LED strip hardware (rpi_ws281x library)."""
-        pin = getattr(board, f"D{self.__gpio_pin}")
+    def __init_hardware(self) -> None:
+        """Initialize the LED strip hardware."""
         self.strip = neopixel.NeoPixel(
-            pin, 
+            self.__gpio_pin, 
             self.__length, 
             pixel_order='GRBW', 
             auto_write=False
         )
 
-        self.strip.fill(0)
-        self.strip.show()
+        self.clear()
 
     def clear(self) -> None:
         """Turn off all LEDs."""
@@ -55,17 +53,15 @@ class LEDStrip:
     def cleanup(self) -> None:
         """Clean up resources."""
         if self.strip:
-            self.strip._cleanup()
+            self.strip.deinit()
             self.strip = None
 
-    def fill(self, colors: List[Tuple[int, int, int]]) -> None:
+    def fill(self, color: Tuple[int, int, int]) -> None:
         """
-        Fill the LED strip with a list of colors.
+        Fill the LED strip with a colors.
         
         Args:
-            colors: List of RGB tuples for each pixel
+            color: RGB tuple for each pixel
         """
-        if self.strip and len(colors) == self.__length:
-            for i in range(self.__length):
-                self.strip[i] = colors[i]
-            self.strip.show()
+        if self.strip:
+            self.strip.fill(color)
