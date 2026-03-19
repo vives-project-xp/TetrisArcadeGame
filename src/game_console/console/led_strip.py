@@ -57,3 +57,15 @@ class LEDStrip:
         if self.strip:
             self.strip._cleanup()
             self.strip = None
+
+    def fill(self, colors: List[Tuple[int, int, int]]) -> None:
+        """
+        Fill the LED strip with a list of colors.
+        
+        Args:
+            colors: List of RGB tuples for each pixel
+        """
+        if self.strip and len(colors) == self.__length:
+            for i in range(self.__length):
+                self.strip[i] = colors[i]
+            self.strip.show()
