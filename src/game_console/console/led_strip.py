@@ -1,12 +1,11 @@
 from typing import List, Tuple
-import board
 import neopixel
 
 
 class LEDStrip:
     """Driver for LED strip"""
     
-    def __init__(self, length: int, gpio_pin: int) -> None:
+    def __init__(self, length: int, gpio_pin) -> None:
         """
         Initialize LED strip.
         Args:
@@ -14,13 +13,12 @@ class LEDStrip:
             gpio_pin: GPIO pin for data line
         """
         self.__length = length
-        self.__gpio_pin = gpio_pin
-        self.__init_hardware()
+        self.__init_hardware(gpio_pin)
     
-    def __init_hardware(self) -> None:
+    def __init_hardware(self, gpio_pin) -> None:
         """Initialize the LED strip hardware."""
-        self.strip = neopixel.NeoPixel(
-            self.__gpio_pin, 
+        self.__strip = neopixel.NeoPixel(
+            gpio_pin,
             self.__length, 
             pixel_order='GRBW', 
             auto_write=False
@@ -30,9 +28,9 @@ class LEDStrip:
 
     def clear(self) -> None:
         """Turn off all LEDs."""
-        if self.strip:
-            self.strip.fill(0)
-            self.strip.show()
+        if self.__strip:
+            self.__strip.fill(0)
+            self.__strip.show()
     
     def set_pixel(self, i: int, color: Tuple[int, int, int]) -> None:
         """
@@ -42,19 +40,19 @@ class LEDStrip:
             i: coordinate
             color: RGB tuple
         """
-        if self.strip and 0 <= i < self.__length:
-            self.strip[i] = color
+        if self.__strip and 0 <= i < self.__length:
+            self.__strip[i] = color
 
     def show(self) -> None:
         """Update the LED strip to show changes."""
-        if self.strip:
-            self.strip.show()
+        if self.__strip:
+            self.__strip.show()
     
     def cleanup(self) -> None:
         """Clean up resources."""
-        if self.strip:
-            self.strip.deinit()
-            self.strip = None
+        if self.__strip:
+            self.__strip.deinit()
+            self.__strip = None
 
     def fill(self, color: Tuple[int, int, int]) -> None:
         """
@@ -63,5 +61,5 @@ class LEDStrip:
         Args:
             color: RGB tuple for each pixel
         """
-        if self.strip:
-            self.strip.fill(color)
+        if self.__strip:
+            self.__strip.fill(color)
