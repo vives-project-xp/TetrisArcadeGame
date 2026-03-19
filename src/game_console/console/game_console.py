@@ -38,16 +38,17 @@ class GameConsole:
         pass
 
     def __rgb_matrix_to_linear(self, rgbll: List[List[tuple]]) -> List[tuple]:
+        #TODO transform top-left zero pixel to bottom-right
         if not rgbll:
             return []
-        width = rgbll[0].len()
+        width = len(rgbll[0])
         result = []
         for i, row_rgbl in enumerate(rgbll):
-            if width != row_rgbl.len():
+            if width != len(row_rgbl):
                 raise ValueError("Inconsistent width of the arrays")
             if i % 2 == 1:
                 row_rgbl.reverse()
-            result.append(row_rgbl)
+            result.extend(row_rgbl)
         return result
     
     def __draw_strip(self, rgbl: List[tuple], offset: int = 0) -> None:
@@ -64,7 +65,15 @@ class GameConsole:
         Args:
             rgbll: 2D list of RGB tuples representing the 10x20 matrix
         """
+        print("will draw this:")
+        for row in rgbll:
+            print(''.join('0' if rgb == (0, 0, 0) else 'X' for rgb in row))
+        print()
         self.__draw_strip(self.__rgb_matrix_to_linear(rgbll), config.MAIN_MATRIX_OFFSET)
+        print("did draw this:")
+        for row in rgbll:
+            print(''.join('0' if rgb == (0, 0, 0) else 'X' for rgb in row))
+        print()
     
     def draw_secondary_display(self, rgbll: List[List[tuple]]) -> None:
         """

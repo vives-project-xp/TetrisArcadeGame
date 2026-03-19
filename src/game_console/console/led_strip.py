@@ -13,9 +13,9 @@ class LEDStrip:
             gpio_pin: GPIO pin for data line
         """
         self.__length = length
-        self.__init_hardware(gpio_pin)
+        self._init_hardware(gpio_pin)
     
-    def __init_hardware(self, gpio_pin) -> None:
+    def _init_hardware(self, gpio_pin) -> None:
         """Initialize the LED strip hardware."""
         self.__strip = neopixel.NeoPixel(
             gpio_pin,
