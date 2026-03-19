@@ -1,9 +1,9 @@
 # 3d-prints
 
-Hier kunnen jullie alle files vinden om de hoekjes te 3d-printen.
+Here you can find all the files to 3D print the corners to properly mount the game console.
 
 ## Dubbel hoekje
-Hier kunnen jullie een hoekje vinden om met 4 vijzen vast te maken.
+Here you can find a corner to fasten with 4 screws.
 
 ## Enkel hoekje
-Hier kunnen jullie een hoekje vinden om met 2 vijzen vast te maken.
+Here you can find a corner to fasten with 2 screws.
