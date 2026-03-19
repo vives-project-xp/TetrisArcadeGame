@@ -1,6 +1,6 @@
 # Documentation
 
-Here you can find all documentation.
+Here you can find all the documentation.
 
 ## Structure
 - [Arhcitecture](./Architecture/README.md) : Here you will find the electrical diagram.
