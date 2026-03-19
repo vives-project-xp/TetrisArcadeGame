@@ -4,6 +4,7 @@ from typing import List, Optional, Set
 from console.controls import ControlsState, ControlsEvent
 from cartridges.base_cartridge import GameCartridge
 from console.input_manager import InputManager
+from console.led_strip import LEDStrip
 
 
 class GameConsole:
@@ -15,6 +16,7 @@ class GameConsole:
     def __init__(self):
         """Initializes the game console."""
         self.__input_manager = InputManager()
+        self.__led_strip = LEDStrip(config.LED_STRIP_LEN, config.LED_STRIP_PIN)
         self.__game_cartridge = None
     
     def run(self):
@@ -32,7 +34,28 @@ class GameConsole:
 
     def clear_all(self) -> None:
         """Clear all displays."""
+        self.__led_strip.clear()
         pass
+
+    def __rgb_matrix_to_linear(self, rgbll: List[List[tuple]]) -> List[tuple]:
+        if not rgbll:
+            return []
+        width = rgbll[0].len()
+        result = []
+        for i, row_rgbl in enumerate(rgbll):
+            if width != row_rgbl.len():
+                raise ValueError("Inconsistent width of the arrays")
+            if i % 2 == 1:
+                row_rgbl.reverse()
+            result.append(row_rgbl)
+        return result
+    
+    def __draw_strip(self, rgbl: List[tuple], offset: int = 0) -> None:
+        for i, rgb in enumerate(rgbl, start=offset):
+            self.__led_strip.set_pixel(i, rgb)
+    
+    def commit_displays(self) -> None:
+        self.__led_strip.show()
     
     def draw_main_display(self, rgbll: List[List[tuple]]) -> None:
         """
@@ -41,7 +64,7 @@ class GameConsole:
         Args:
             rgbll: 2D list of RGB tuples representing the 10x20 matrix
         """
-        pass
+        self.__draw_strip(self.__rgb_matrix_to_linear(rgbll), config.MAIN_MATRIX_OFFSET)
     
     def draw_secondary_display(self, rgbll: List[List[tuple]]) -> None:
         """
@@ -50,7 +73,13 @@ class GameConsole:
         Args:
             rgbll: 2D list of RGB tuples
         """
-        pass
+        self.__draw_strip(self.__rgb_matrix_to_linear(rgbll), config.SECONDARY_MATRIX_OFFSET)
+    
+    def fill_main_display(self, rgb) -> None:
+        self.__led_strip.fill(config.MAIN_MATRIX_OFFSET, config.MAIN_MATRIX_PIX_COUNT, rgb)
+    
+    def fill_secondary_display(self, rgb) -> None:
+        self.__led_strip.fill(config.SECONDARY_MATRIX_OFFSET, config.SECONDARY_MATRIX_PIX_COUNT, rgb)
     
     def set_segment_display_text(self, text: str) -> None:
         """
@@ -73,6 +102,7 @@ class GameConsole:
         self.clear_all()
         if cartridge:
             self.__game_cartridge = cartridge
+            cartridge.init(self)
     
     def get_active_control_states(self) -> Set[ControlsState]:
         """

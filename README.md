@@ -23,8 +23,9 @@ The project involves the design and realization of a physical Tetris arcade with
 </div>
 
 ## Folder structure
+- [3d-prints](./3d-prints/readme.md) : Here you will find the files for 3d-print.
 - [Documentation](./Documentation/README.md) : Here you will find everything about the documentation.
-- [Demo](./src) : Here you will find everthing off the code.
-- [Electrical Diagram](./Electrical%20Diagram/README.md) : Here you will find the electrical Diagram.
 - [Housing](./Housing/README.md) : Here you will will find everything about the housing.
-- [Lasercutting](./Lasercutting/README.md) : Here you will find the files for lasercutting
+- [Lasercutting](./Lasercutting/README.md) : Here you will find the files for lasercutting.
+- [Setup](./Autostartscript.md) : Here you will find a readme how you can do auto start for the program.
+- [src](./src) : Here you will find everthing off the code.
