@@ -38,15 +38,17 @@ class GameConsole:
         pass
 
     def __rgb_matrix_to_linear(self, rgbll: List[List[tuple]]) -> List[tuple]:
-        #TODO transform top-left zero pixel to bottom-right
         if not rgbll:
             return []
         width = len(rgbll[0])
         result = []
+        # transform from top-left to bottom-left coordinates
+        rgbll.reverse()
         for i, row_rgbl in enumerate(rgbll):
             if width != len(row_rgbl):
                 raise ValueError("Inconsistent width of the arrays")
             if i % 2 == 1:
+                # transform to zigzag
                 row_rgbl.reverse()
             result.extend(row_rgbl)
         return result
@@ -67,12 +69,12 @@ class GameConsole:
         """
         print("will draw this:")
         for row in rgbll:
-            print(''.join('0' if rgb == (0, 0, 0) else 'X' for rgb in row))
+            print(''.join('.' if rgb == (0, 0, 0) else 'X' for rgb in row))
         print()
         self.__draw_strip(self.__rgb_matrix_to_linear(rgbll), config.MAIN_MATRIX_OFFSET)
         print("did draw this:")
         for row in rgbll:
-            print(''.join('0' if rgb == (0, 0, 0) else 'X' for rgb in row))
+            print(''.join('.' if rgb == (0, 0, 0) else 'X' for rgb in row))
         print()
     
     def draw_secondary_display(self, rgbll: List[List[tuple]]) -> None:
