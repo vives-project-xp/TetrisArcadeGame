@@ -4,26 +4,37 @@ Here you can find everything to make the housing step-by-step for laser cutting 
 
 ## Step 1
 
-Als eerste stap hebben we ons **idee van de behuizing** gemaakt in fusion, om een idee ervan te krijgen hoe het eruit zou zien.
+To visualize our **idea**, we first created a 3D model in Fusion.
+This allowed us to check if the design looked good and if the layout worked well. 
+By doing this first, we were then able to start drawing each individual part separately in Fusion.
+
+<img src = "./Images/Idee Tetris behuizing.jpg" height="650" width="350" > 
 
 ## Step 2
 
-Daarna hebben we het **speelveld** apart getekend in fusion en aan de uiteinde rechthoekjes geplaatst om perfect in elkaar te passen.
-We hebben er ook voor gezorgd dat er aan alle kanten geulen zijn dat de binnenplaatjes er perfect inpassen.
-Aan de achterkant van binnenplaatjes hebben we kleine geulen gemaakt zodat de ledstrip gemakkelijk aan de achterkant op de achterplaat kan bevestigd worden.
+Next, we designed the **playfield** separately in Fusion. We added small rectangles at the ends so that all the parts fit together perfectly. We also included grooves on all sides to make sure the inner plates slide right in. On the back of these inner plates, we made small channels so the LED strip can easily be attached to the backplate.
+
+<img src = "./Images/Middenrooster%20speelveld.jpg" height="650" width="350" >
+<img src = "./Images/Omranding%20speelveld.jpg" height="650" width="350" >
+<!--<img src = "./Images/Speelveld.jpg" height="650" width="350" >-->
 
 ## Step 3
 
-Dan hebben we het **volgende blokje veld** apart getekend in fusion terug op de zelfde methode als het speelveld.
+Then, we designed the **next field block** separately in Fusion, using the same method as we did for the playfield.
+
+<img src = "./Images/middenrooster%20volgende%20blok.jpg" height="650" width="350" >
+<img src = "./Images/Omranding%20volgende%20blok.jpg" height="650" width="350" >
+<!--<img src = "./Images/NextBlock.jpg" height="650" width="350" >-->
 
 ## Step 4
 
-Daarachter hebben we de **console en de achterplaat** terug apart getekend in fusion met aan de uiteinde rechthoekjes geplaatst om perfect in elkaar te passen.
-We hebben aan beide zijkanten van de console geulen gemaakt voor de ventilatie.
-Aan de voorkant van de console hebben we een gat voorzien voor de speaker.
-Aan de bovenkant van de console hebben we 5 gaten gemaakt, 4 gaten zijn voor de knoppen om te spelen en 1 gat als pauze en play knop.
-Aan de linkerkant hebben we dan nog een aan- en uitknop geplaatst.
+Behind that, we designed the **console and the backplate** separately in Fusion. We added small rectangles at the edges so they fit together perfectly. On both sides of the console, we created slots for ventilation. We also included a hole at the front for the speaker. On top of the console, we made five holes: four for the game buttons and one for the play/pause button. Finally, we placed an on/off switch on the left side.
+
+<img src = "./Images/Console.jpg" height="650" width="350" >
+<img src = "./Images/Achterplaat.jpg" height="650" width="350" >
 
 ## Step 5
 
-Als laatste hebben we alles in elkaar gestoken.
+Finally, we put everything together.
+
+<!--<img src = "" height="650" width="350" >-->
