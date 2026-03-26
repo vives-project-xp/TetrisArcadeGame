@@ -1,3 +1,4 @@
+import time
 from typing import List, TYPE_CHECKING
 from cartridges.base_cartridge import GameCartridge
 import config
@@ -87,6 +88,15 @@ def _generate_pieces():
     return all_pieces
 
 PIECES = _generate_pieces()
+COLORS = [
+    (0xff, 0x00, 0x00),
+    (0x00, 0xff, 0x00),
+    (0x00, 0x00, 0xff),
+    (0x00, 0xff, 0xff),
+    (0xff, 0x00, 0xff),
+    (0xff, 0xff, 0x00),
+    (0xff, 0xff, 0xff)
+]
 
 class BoardBlock():
     def __init__(self):
@@ -130,11 +140,7 @@ class TetrisCartridge(GameCartridge):
         self.mRotation = random.randrange(4)
         self.mPosX = (config.MAIN_MATRIX_WIDTH // 2) - 2 
         self.mPosY = -2 
-        self.mColor = (
-            random.randrange(255),
-            random.randrange(255),
-            random.randrange(255)
-        )
+        self.mColor = random.choice(COLORS)
     
     def is_possible_movement(self, pX: int, pY: int, pPiece: int, pRotation: int) -> bool:
         """
@@ -229,8 +235,8 @@ class TetrisCartridge(GameCartridge):
                     if self.is_possible_movement(self.mPosX, self.mPosY, self.mPiece, next_rotation):
                         self.mRotation = next_rotation
                         should_update_main_display = True
-                # elif event == ControlsEvent.BTN_A_PRESSED: 
-                #     # Instantly drop the piece down as far as possible (hard drop)
+                # elif event == ControlsEvent.BTN_A_PRESSED:
+                #     # Drop the piece down as far as possible
                 #     while self.is_possible_movement(self.mPosX, self.mPosY, self.mPiece, self.mRotation):
                 #         self.mPosY += 1
                 #     self.mPosY -= 1 # Step back to the valid position
@@ -253,6 +259,7 @@ class TetrisCartridge(GameCartridge):
                 
                 if self.is_game_over():
                     # Reset board map
+                    time.sleep(1)
                     self.start_new_game()
                 else:
                     self.create_new_piece()
