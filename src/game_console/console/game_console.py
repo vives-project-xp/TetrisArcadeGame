@@ -47,7 +47,7 @@ class GameConsole:
         for i, row_rgbl in enumerate(rgbll):
             if width != len(row_rgbl):
                 raise ValueError("Inconsistent width of the arrays")
-            if i % 2 == 1:
+            if i % 2 == 0:
                 # transform to zigzag
                 row_rgbl.reverse()
             result.extend(row_rgbl)
