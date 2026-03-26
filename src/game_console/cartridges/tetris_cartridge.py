@@ -127,6 +127,7 @@ class TetrisCartridge(GameCartridge):
     
     def init(self, game_console: 'GameConsole') -> None:
         self.console = game_console
+        self.console.play_music("tetris_theme.mp3")
         print("TetrisCartridge initialized")
         self.start_new_game()
     
