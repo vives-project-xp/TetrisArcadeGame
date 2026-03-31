@@ -5,6 +5,7 @@ from console.controls import ControlsState, ControlsEvent
 from cartridges.base_cartridge import GameCartridge
 from console.input_manager import InputManager
 from console.led_strip import LEDStrip
+import pygame
 
 
 class GameConsole:
@@ -18,6 +19,7 @@ class GameConsole:
         self.__input_manager = InputManager()
         self.__led_strip = LEDStrip(config.LED_STRIP_LEN, config.LED_STRIP_PIN)
         self.__game_cartridge = None
+        pygame.mixer.init(channels=1)
     
     def run(self):
         """Starts the game console and game loop."""
@@ -31,6 +33,7 @@ class GameConsole:
         except KeyboardInterrupt:
             self.insert_cartridge(None)
             self.__input_manager.cleanup()
+            pygame.mixer.stop()
 
     def clear_all(self) -> None:
         """Clear all displays."""
@@ -131,7 +134,18 @@ class GameConsole:
         Args:
             sound_title: Title of the sound to play
         """
-        pass
+        sound = pygame.mixer.Sound("assets/sounds/" + sound_title)
+        sound.play()
+        
+    def play_music(self, music_title: str) -> None:
+        """
+        Play background music.
+        
+        Args:
+            music_title: Title of the music file to play
+        """
+        pygame.mixer.music.load("assets/sounds/" + music_title)
+        pygame.mixer.music.play(-1)
     
     def pause(self) -> None:
         """Pause the game console."""
