@@ -21,8 +21,8 @@ LED_STRIP_LEN = MAIN_MATRIX_PIX_COUNT + SECONDARY_MATRIX_PIX_COUNT
 
 # GPIO pin mappings for physical buttons (BCM)
 BUTTON_GPIO_MAPPING = {
-    # 17: ControlsState.BTN_UP_HOLD,
-    # 27: ControlsState.BTN_DOWN_HOLD,
+    13: ControlsState.BTN_UP_HOLD,
+    19: ControlsState.BTN_DOWN_HOLD,
     26: ControlsState.BTN_LEFT_HOLD,
     20: ControlsState.BTN_RIGHT_HOLD,
 }
