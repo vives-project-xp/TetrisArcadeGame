@@ -79,7 +79,7 @@ class SevenSegment:
                 f"String too long for display: {len(tokens)} > {max_digits}"
             )
 
-        supported = set("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ- ")
+        supported = set("0123456789ABCDEF- ")
         for token in tokens:
             if token == "deg":
                 continue

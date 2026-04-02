@@ -28,7 +28,6 @@ class GameConsole:
         if not self.__game_cartridge:
             return None
         try:
-            self.set_segment_display_text("helo")
             while True:
                 controls_update = self.__input_manager.poll_inputs()
                 self.__game_cartridge.tick(time.perf_counter(), controls_update)
