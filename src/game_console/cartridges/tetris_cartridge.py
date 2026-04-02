@@ -1,5 +1,6 @@
 import time
 from typing import List, TYPE_CHECKING
+
 from cartridges.base_cartridge import GameCartridge
 import config
 import random
@@ -11,7 +12,10 @@ if TYPE_CHECKING:
 # inspired by Javier Lopez's work
 # https://javilop.com/gamedev/tetris-tutorial-in-c-platform-independent-focused-in-game-logic-for-beginners/
 
-WAIT_TIME_S = 0.5 
+BASE_DROP_INTERVAL_S = 0.50
+MIN_DROP_INTERVAL_S = 0.08
+SPEED_FACTOR_PER_LEVEL = 0.90
+LINES_PER_LEVEL = 10
 PIECE_BLOCKS = 5
 
 def _rotate_piece(piece):
@@ -124,6 +128,11 @@ class TetrisCartridge(GameCartridge):
         self.mRotation = 0
         self.mTime1 = 0.0
         self.mColor = (0,0,0)
+        self.lines_cleared_total = 0
+        self.level = 1
+        self.score = 0
+        self.high_score = 0
+        self.curr_drop_interval = 0
     
     def init(self, game_console: 'GameConsole') -> None:
         self.console = game_console
@@ -134,8 +143,12 @@ class TetrisCartridge(GameCartridge):
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         self.mTime1 = 0.0
+        self.lines_cleared_total = 0
+        self.level = 1
+        self.score = 0
         self.create_new_piece()
-        
+        self.curr_drop_interval = BASE_DROP_INTERVAL_S
+
     def create_new_piece(self) -> None:
         self.mPiece = random.randrange(len(PIECES))
         self.mRotation = random.randrange(4)
@@ -199,8 +212,8 @@ class TetrisCartridge(GameCartridge):
         for i in range(config.MAIN_MATRIX_WIDTH):
              self.__board[0][i].set_color(None)
              
-    def delete_possible_lines(self):
-        """Delete all the lines that should be removed."""
+    def delete_possible_lines(self) -> int:
+        removed = 0
         for j in range(config.MAIN_MATRIX_HEIGHT):
             filled_count = 0
             for i in range(config.MAIN_MATRIX_WIDTH):
@@ -208,6 +221,24 @@ class TetrisCartridge(GameCartridge):
                     filled_count += 1
             if filled_count == config.MAIN_MATRIX_WIDTH:
                 self.delete_line(j)
+                removed += 1
+        return removed
+
+    def _recalculate_level(self) -> None:
+        self.level = 1 + (self.lines_cleared_total // LINES_PER_LEVEL)
+        self.curr_drop_interval = max(
+            MIN_DROP_INTERVAL_S,
+            BASE_DROP_INTERVAL_S * (SPEED_FACTOR_PER_LEVEL ** (self.level - 1))
+        )
+
+    def _add_score_for_line_clear(self, cleared_lines: int) -> None:
+        table = {1: 40, 2: 100, 3: 300, 4: 1200}
+        self.score += table.get(cleared_lines, 1200) * self.level
+        if self.score > self.high_score:
+            self.high_score = self.score
+
+    def _score_for_4digit_display(self, value: int) -> int:
+        return min(value, 9999)
 
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
         # Initialize timer on the first tick
@@ -251,20 +282,25 @@ class TetrisCartridge(GameCartridge):
                 #     else:
                 #         self.create_new_piece()
 
-        if current_time - self.mTime1 > WAIT_TIME_S:
+        if current_time - self.mTime1 >= self.curr_drop_interval:
+            cleared = 0
             if self.is_possible_movement(self.mPosX, self.mPosY + 1, self.mPiece, self.mRotation):
                 self.mPosY += 1
             else:
                 self.store_piece(self.mPosX, self.mPosY, self.mPiece, self.mRotation)
-                self.delete_possible_lines()
-                
-                if self.is_game_over():
-                    # Reset board map
-                    time.sleep(1)
-                    self.start_new_game()
-                else:
-                    self.create_new_piece()
-                    
+                cleared = self.delete_possible_lines()
+            
+            if cleared > 0:
+                self.lines_cleared_total += cleared
+                self._recalculate_level()
+                self._add_score_for_line_clear(cleared)
+            
+            if self.is_game_over():
+                time.sleep(1)
+                self.start_new_game()
+            else:
+                self.create_new_piece()
+            
             should_update_main_display = True
             self.mTime1 = current_time
         
