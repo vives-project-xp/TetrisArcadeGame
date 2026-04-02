@@ -16,10 +16,8 @@ BASE_DROP_INTERVAL_S = 0.50
 MIN_DROP_INTERVAL_S = 0.08
 SPEED_FACTOR_PER_LEVEL = 0.90
 LINES_PER_LEVEL = 10
-<<<<<<< HEAD
-=======
+PIECE_FAST_DOWN_PERIOD_S = 0.1
 
->>>>>>> 1de1a5850faaa971a0e4eab03532b187a0de4a95
 def _rotate_piece(piece):
     """Rotate a piece 90 degrees clockwise."""
     return [list(row) for row in zip(*piece[::-1])]
@@ -125,14 +123,6 @@ class TetrisCartridge(GameCartridge):
     def __init__(self):
         self.__console = None
         self.__board = []
-<<<<<<< HEAD
-        self.mPosX = 0
-        self.mPosY = 0
-        self.mPiece = 0
-        self.mRotation = 0
-        self.mTime1 = 0.0
-        self.mColor = (0,0,0)
-=======
         self.__currPiecePosX = 0
         self.__currPiecePosY = 0
         self.__currPieceId = 0
@@ -145,7 +135,6 @@ class TetrisCartridge(GameCartridge):
         self.__score = 0
         self.__high_score = 0
         self.__curr_drop_interval = 0
->>>>>>> 1de1a5850faaa971a0e4eab03532b187a0de4a95
     
     def init(self, game_console: 'GameConsole') -> None:
         self.__console = game_console
@@ -161,16 +150,12 @@ class TetrisCartridge(GameCartridge):
     
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
-<<<<<<< HEAD
-        self.mTime1 = 0.0
-=======
         self.__pieceLastDropTime = 0.0
         self.__lines_cleared_total = 0
         self.__level = 1
         self.__score = 0
         self.__pieceLastFastDownDropTime = 0.0
         self.__console.play_music()
->>>>>>> 1de1a5850faaa971a0e4eab03532b187a0de4a95
         self.create_new_piece()
         self.__curr_drop_interval = BASE_DROP_INTERVAL_S
 
@@ -295,39 +280,9 @@ class TetrisCartridge(GameCartridge):
                     if self.is_possible_movement(self.__currPiecePosX, self.__currPiecePosY, self.__currPieceId, next_rotation):
                         self.__currPieceRotation = next_rotation
                         should_update_main_display = True
-<<<<<<< HEAD
-                # elif event == ControlsEvent.BTN_A_PRESSED:
-                #     # Drop the piece down as far as possible
-                #     while self.is_possible_movement(self.mPosX, self.mPosY, self.mPiece, self.mRotation):
-                #         self.mPosY += 1
-                #     self.mPosY -= 1 # Step back to the valid position
-                    
-                #     self.store_piece(self.mPosX, self.mPosY, self.mPiece, self.mRotation)
-                #     self.delete_possible_lines()
-                #     if self.is_game_over():
-                #         # Reset board map
-                #         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
-                #         self.create_new_piece()
-                #     else:
-                #         self.create_new_piece()
-
-        if current_time - self.mTime1 > WAIT_TIME_S:
-            if self.is_possible_movement(self.mPosX, self.mPosY + 1, self.mPiece, self.mRotation):
-                self.mPosY += 1
-            else:
-                self.store_piece(self.mPosX, self.mPosY, self.mPiece, self.mRotation)
-                self.delete_possible_lines()
-                
-                if self.is_game_over():
-                    # Reset board map
-                    time.sleep(1)
-                    self.start_new_game()
-                else:
-                    self.create_new_piece()
-=======
                         self.__ROTATE_PIECE_SOUND.play()
 
-        if current_time - self.__pieceLastDropTime > self.curr_drop_interval:
+        if current_time - self.__pieceLastDropTime > self.__curr_drop_interval:
             self.__drop_the_piece()
             should_update_main_display = True
             self.__pieceLastDropTime = current_time
@@ -335,16 +290,13 @@ class TetrisCartridge(GameCartridge):
         if current_time - self.__pieceLastFastDownDropTime > PIECE_FAST_DOWN_PERIOD_S:
             if ControlsState.BTN_DOWN_HOLD in self.__console.get_active_control_states():
                 self.__drop_the_piece()
->>>>>>> 1de1a5850faaa971a0e4eab03532b187a0de4a95
                     
-            should_update_main_display = True
-            self.mTime1 = current_time
+                should_update_main_display = True
+                self.__pieceLastFastDownDropTime = current_time
+            else:
+                self.__pieceLastFastDownDropTime = 0.0
         
         if should_update_main_display:
-<<<<<<< HEAD
-            self.console.draw_main_display(self.render_board())
-            self.console.commit_displays()
-=======
             self.__console.draw_main_display(self.render_board())
             self.__console.commit_displays()
 
@@ -367,7 +319,6 @@ class TetrisCartridge(GameCartridge):
                 self.start_new_game()
             else:
                 self.create_new_piece()
->>>>>>> 1de1a5850faaa971a0e4eab03532b187a0de4a95
             
     def deinit(self) -> None:
         print("TetrisCartridge deinitialized")
