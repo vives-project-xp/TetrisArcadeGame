@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 # https://javilop.com/gamedev/tetris-tutorial-in-c-platform-independent-focused-in-game-logic-for-beginners/
 
 PIECE_DROP_PERIOD_S = 0.5 
-PIECE_FAST_DOWN_PERIOD_S = 0.1 
+PIECE_FAST_DOWN_PERIOD_S = 0.05 
 
 def _rotate_piece(piece):
     """Rotate a piece 90 degrees clockwise."""
@@ -129,7 +129,13 @@ class TetrisCartridge(GameCartridge):
     
     def init(self, game_console: 'GameConsole') -> None:
         self.__console = game_console
-        self.__console.play_music("tetris_theme.mp3")
+        self.__console.load_music("tetris_theme.mp3")
+        self.__console.set_music_volume(0.15)
+        self.__MOVE_PIECE_SOUND = self.__console.load_sound("move_piece.wav")
+        self.__CLEAR_LINE_SOUND = self.__console.load_sound("clear_line.mp3")
+        self.__PIECE_FALLING_SOUND = self.__console.load_sound("piece_falling.mp3")
+        self.__ROTATE_PIECE_SOUND = self.__console.load_sound("rotate_piece.wav")
+        self.__GAME_OVER_SOUND = self.__console.load_sound("tetris_game_over.mp3")
         print("TetrisCartridge initialized")
         self.start_new_game()
     
@@ -137,6 +143,7 @@ class TetrisCartridge(GameCartridge):
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         self.__pieceLastDropTime = 0.0
         self.__pieceLastFastDownDropTime = 0.0
+        self.__console.play_music()
         self.create_new_piece()
         
     def create_new_piece(self) -> None:
@@ -210,6 +217,7 @@ class TetrisCartridge(GameCartridge):
                 if not self.__board[j][i].is_free():
                     filled_count += 1
             if filled_count == config.MAIN_MATRIX_WIDTH:
+                self.__CLEAR_LINE_SOUND.play()
                 self.delete_line(j)
 
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
@@ -224,14 +232,16 @@ class TetrisCartridge(GameCartridge):
                     if self.is_possible_movement(self.__currPiecePosX - 1, self.__currPiecePosY, self.__currPieceId, self.__currPieceRotation):
                         self.__currPiecePosX -= 1
                         should_update_main_display = True
+                        # self.__MOVE_PIECE_SOUND.play()
                 elif event == ControlsEvent.BTN_RIGHT_PRESSED:
                     if self.is_possible_movement(self.__currPiecePosX + 1, self.__currPiecePosY, self.__currPieceId, self.__currPieceRotation):
                         self.__currPiecePosX += 1
                         should_update_main_display = True
+                        # self.__MOVE_PIECE_SOUND.play()
                 elif event == ControlsEvent.BTN_DOWN_PRESSED:
                     # Drop piece down immediately
                     if self.is_possible_movement(self.__currPiecePosX, self.__currPiecePosY + 1, self.__currPieceId, self.__currPieceRotation):
-                        self.__currPiecePosY += 1
+                        self.__drop_the_piece()
                         should_update_main_display = True
                 elif event == ControlsEvent.BTN_UP_PRESSED:
                     # Rotate the piece independently
@@ -239,6 +249,7 @@ class TetrisCartridge(GameCartridge):
                     if self.is_possible_movement(self.__currPiecePosX, self.__currPiecePosY, self.__currPieceId, next_rotation):
                         self.__currPieceRotation = next_rotation
                         should_update_main_display = True
+                        self.__ROTATE_PIECE_SOUND.play()
 
         if current_time - self.__pieceLastDropTime > PIECE_DROP_PERIOD_S:
             self.__drop_the_piece()
@@ -264,10 +275,13 @@ class TetrisCartridge(GameCartridge):
             self.__currPiecePosY += 1
         else:
             self.store_piece(self.__currPiecePosX, self.__currPiecePosY, self.__currPieceId, self.__currPieceRotation)
+            self.__PIECE_FALLING_SOUND.play()
             self.delete_possible_lines()
                 
             if self.is_game_over():
-                time.sleep(1)
+                self.__console.pause_music()
+                self.__GAME_OVER_SOUND.play()
+                time.sleep(3)
                 self.start_new_game()
             else:
                 self.create_new_piece()

@@ -127,25 +127,57 @@ class GameConsole:
         """
         return self.__input_manager.get_current_states()
     
-    def play_sound(self, sound_title: str) -> None:
+    def load_sound(self, sound_title: str) -> None:
         """
-        Play a sound effect.
+        Load a sound effect.
         
         Args:
-            sound_title: Title of the sound to play
+            sound_title: Title of the sound to load
         """
         sound = pygame.mixer.Sound("assets/sounds/" + sound_title)
-        sound.play()
+        return sound
         
-    def play_music(self, music_title: str) -> None:
+    def load_music(self, music_title: str) -> None:
         """
-        Play background music.
+        Load background music.
         
         Args:
-            music_title: Title of the music file to play
+            music_title: Title of the music file to load
         """
-        pygame.mixer.music.load("assets/sounds/" + music_title)
+        pygame.mixer.music.load("assets/music/" + music_title)
+    
+    def unload_music(self) -> None:
+        """Unload the current music."""
+        pygame.mixer.music.unload()
+
+    def replay_music(self) -> None:
+        """Replay the current music."""
         pygame.mixer.music.play(-1)
+
+    def pause_music(self) -> None:
+        """Pause the current music."""
+        pygame.mixer.music.pause()
+
+    def unpause_music(self) -> None:
+        """Resume the paused music."""
+        pygame.mixer.music.unpause()
+
+    def play_music(self) -> None:
+        """Play the loaded music."""
+        pygame.mixer.music.play(-1)
+        
+    def fadeout_music(self, fade_time: int) -> None:
+        """Fade out the music."""
+        pygame.mixer.music.fadeout(fade_time)
+    
+    def set_music_volume(self, volume: float) -> None:
+        """
+        Set the music volume.
+        
+        Args:
+            volume: Volume level from 0.0 to 1.0
+        """
+        pygame.mixer.music.set_volume(volume)
     
     def pause(self) -> None:
         """Pause the game console."""
