@@ -298,3 +298,7 @@ class TetrisCartridge(GameCartridge):
                     if 0 <= i1 < config.MAIN_MATRIX_WIDTH and 0 <= j1 < config.MAIN_MATRIX_HEIGHT:
                         colored_board[j1][i1] = self.__currPieceColor
         return colored_board
+
+    def force_update(self) -> None:
+        self.__console.draw_main_display(self.render_board())
+        self.__console.commit_displays()
