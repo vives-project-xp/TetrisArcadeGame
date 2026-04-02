@@ -1,5 +1,6 @@
 import time
 from typing import List, TYPE_CHECKING
+
 from cartridges.base_cartridge import GameCartridge
 import config
 import random
@@ -11,8 +12,10 @@ if TYPE_CHECKING:
 # inspired by Javier Lopez's work
 # https://javilop.com/gamedev/tetris-tutorial-in-c-platform-independent-focused-in-game-logic-for-beginners/
 
-PIECE_DROP_PERIOD_S = 0.5 
-PIECE_FAST_DOWN_PERIOD_S = 0.05 
+BASE_DROP_INTERVAL_S = 0.50
+MIN_DROP_INTERVAL_S = 0.08
+SPEED_FACTOR_PER_LEVEL = 0.90
+LINES_PER_LEVEL = 10
 
 def _rotate_piece(piece):
     """Rotate a piece 90 degrees clockwise."""
@@ -126,6 +129,11 @@ class TetrisCartridge(GameCartridge):
         self.__pieceLastDropTime = 0.0
         self.__pieceLastFastDownDropTime = 0.0
         self.__currPieceColor = (0,0,0)
+        self.__lines_cleared_total = 0
+        self.__level = 1
+        self.__score = 0
+        self.__high_score = 0
+        self.__curr_drop_interval = 0
     
     def init(self, game_console: 'GameConsole') -> None:
         self.__console = game_console
@@ -142,10 +150,14 @@ class TetrisCartridge(GameCartridge):
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         self.__pieceLastDropTime = 0.0
+        self.__lines_cleared_total = 0
+        self.__level = 1
+        self.__score = 0
         self.__pieceLastFastDownDropTime = 0.0
         self.__console.play_music()
         self.create_new_piece()
-        
+        self.__curr_drop_interval = BASE_DROP_INTERVAL_S
+
     def create_new_piece(self) -> None:
         self.__currPieceId = random.randrange(len(PIECES))
         self.__currPieceRotation = random.randrange(4)
@@ -209,8 +221,8 @@ class TetrisCartridge(GameCartridge):
         for i in range(config.MAIN_MATRIX_WIDTH):
              self.__board[0][i].set_color(None)
              
-    def delete_possible_lines(self):
-        """Delete all the lines that should be removed."""
+    def delete_possible_lines(self) -> int:
+        removed = 0
         for j in range(config.MAIN_MATRIX_HEIGHT):
             filled_count = 0
             for i in range(config.MAIN_MATRIX_WIDTH):
@@ -219,6 +231,24 @@ class TetrisCartridge(GameCartridge):
             if filled_count == config.MAIN_MATRIX_WIDTH:
                 self.__CLEAR_LINE_SOUND.play()
                 self.delete_line(j)
+                removed += 1
+        return removed
+
+    def _recalculate_level(self) -> None:
+        self.__level = 1 + (self.__lines_cleared_total // LINES_PER_LEVEL)
+        self.__curr_drop_interval = max(
+            MIN_DROP_INTERVAL_S,
+            BASE_DROP_INTERVAL_S * (SPEED_FACTOR_PER_LEVEL ** (self.__level - 1))
+        )
+
+    def _add_score_for_line_clear(self, cleared_lines: int) -> None:
+        table = {1: 40, 2: 100, 3: 300, 4: 1200}
+        self.__score += table.get(cleared_lines, 1200) * self.__level
+        if self.__score > self.__high_score:
+            self.__high_score = self.__score
+
+    def _score_for_4digit_display(self, value: int) -> int:
+        return min(value, 9999)
 
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
         # Initialize timer on the first tick
@@ -251,9 +281,8 @@ class TetrisCartridge(GameCartridge):
                         should_update_main_display = True
                         self.__ROTATE_PIECE_SOUND.play()
 
-        if current_time - self.__pieceLastDropTime > PIECE_DROP_PERIOD_S:
+        if current_time - self.__pieceLastDropTime > self.curr_drop_interval:
             self.__drop_the_piece()
-                    
             should_update_main_display = True
             self.__pieceLastDropTime = current_time
         
@@ -276,7 +305,11 @@ class TetrisCartridge(GameCartridge):
         else:
             self.store_piece(self.__currPiecePosX, self.__currPiecePosY, self.__currPieceId, self.__currPieceRotation)
             self.__PIECE_FALLING_SOUND.play()
-            self.delete_possible_lines()
+            cleared = self.delete_possible_lines()
+            if cleared > 0:
+                self.__lines_cleared_total += cleared
+                self._recalculate_level()
+                self._add_score_for_line_clear(cleared)
                 
             if self.is_game_over():
                 self.__console.pause_music()
