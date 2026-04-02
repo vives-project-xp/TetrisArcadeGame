@@ -3,7 +3,7 @@ from typing import List, TYPE_CHECKING
 from cartridges.base_cartridge import GameCartridge
 import config
 import random
-from console.controls import ControlsEvent
+from console.controls import ControlsEvent, ControlsState
 
 if TYPE_CHECKING:
     from console.game_console import GameConsole
@@ -11,13 +11,14 @@ if TYPE_CHECKING:
 # inspired by Javier Lopez's work
 # https://javilop.com/gamedev/tetris-tutorial-in-c-platform-independent-focused-in-game-logic-for-beginners/
 
-WAIT_TIME_S = 0.5 
-PIECE_BLOCKS = 5
+PIECE_DROP_PERIOD_S = 0.5 
+PIECE_FAST_DOWN_PERIOD_S = 0.1 
 
 def _rotate_piece(piece):
     """Rotate a piece 90 degrees clockwise."""
     return [list(row) for row in zip(*piece[::-1])]
 
+PIECE_BLOCKS = 5
 def _generate_pieces():
     """Generates 4 rotations for each of the 7 pieces respecting the pivot at (2, 2)."""
     base_pieces = [
@@ -116,32 +117,34 @@ class BoardBlock():
 
 class TetrisCartridge(GameCartridge):
     def __init__(self):
-        self.console = None
+        self.__console = None
         self.__board = []
-        self.mPosX = 0
-        self.mPosY = 0
-        self.mPiece = 0
-        self.mRotation = 0
-        self.mTime1 = 0.0
-        self.mColor = (0,0,0)
+        self.__currPiecePosX = 0
+        self.__currPiecePosY = 0
+        self.__currPieceId = 0
+        self.__currPieceRotation = 0
+        self.__pieceLastDropTime = 0.0
+        self.__pieceLastFastDownDropTime = 0.0
+        self.__currPieceColor = (0,0,0)
     
     def init(self, game_console: 'GameConsole') -> None:
-        self.console = game_console
-        self.console.play_music("tetris_theme.mp3")
+        self.__console = game_console
+        self.__console.play_music("tetris_theme.mp3")
         print("TetrisCartridge initialized")
         self.start_new_game()
     
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
-        self.mTime1 = 0.0
+        self.__pieceLastDropTime = 0.0
+        self.__pieceLastFastDownDropTime = 0.0
         self.create_new_piece()
         
     def create_new_piece(self) -> None:
-        self.mPiece = random.randrange(len(PIECES))
-        self.mRotation = random.randrange(4)
-        self.mPosX = (config.MAIN_MATRIX_WIDTH // 2) - 2 
-        self.mPosY = -2 
-        self.mColor = random.choice(COLORS)
+        self.__currPieceId = random.randrange(len(PIECES))
+        self.__currPieceRotation = random.randrange(4)
+        self.__currPiecePosX = (config.MAIN_MATRIX_WIDTH // 2) - 2 
+        self.__currPiecePosY = -2 
+        self.__currPieceColor = random.choice(COLORS)
     
     def is_possible_movement(self, pX: int, pY: int, pPiece: int, pRotation: int) -> bool:
         """
@@ -175,7 +178,7 @@ class TetrisCartridge(GameCartridge):
             for j1, j2 in zip(range(pY, pY + PIECE_BLOCKS), range(PIECE_BLOCKS)):
                 if PIECES[pPiece][pRotation][j2][i2] != 0:
                     if 0 <= i1 < config.MAIN_MATRIX_WIDTH and 0 <= j1 < config.MAIN_MATRIX_HEIGHT:
-                        self.__board[j1][i1].set_color(self.mColor)
+                        self.__board[j1][i1].set_color(self.__currPieceColor)
                         
     def is_game_over(self) -> bool:
         """Check if game is over because a piece reached the top."""
@@ -211,77 +214,73 @@ class TetrisCartridge(GameCartridge):
 
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
         # Initialize timer on the first tick
-        if self.mTime1 == 0.0:
-            self.mTime1 = current_time
+        if self.__pieceLastDropTime == 0.0:
+            self.__pieceLastDropTime = current_time
 
         should_update_main_display = False
         if controls_events:
             for event in controls_events:
                 if event == ControlsEvent.BTN_LEFT_PRESSED:
-                    if self.is_possible_movement(self.mPosX - 1, self.mPosY, self.mPiece, self.mRotation):
-                        self.mPosX -= 1
+                    if self.is_possible_movement(self.__currPiecePosX - 1, self.__currPiecePosY, self.__currPieceId, self.__currPieceRotation):
+                        self.__currPiecePosX -= 1
                         should_update_main_display = True
                 elif event == ControlsEvent.BTN_RIGHT_PRESSED:
-                    if self.is_possible_movement(self.mPosX + 1, self.mPosY, self.mPiece, self.mRotation):
-                        self.mPosX += 1
+                    if self.is_possible_movement(self.__currPiecePosX + 1, self.__currPiecePosY, self.__currPieceId, self.__currPieceRotation):
+                        self.__currPiecePosX += 1
                         should_update_main_display = True
                 elif event == ControlsEvent.BTN_DOWN_PRESSED:
                     # Drop piece down immediately
-                    if self.is_possible_movement(self.mPosX, self.mPosY + 1, self.mPiece, self.mRotation):
-                        self.mPosY += 1
+                    if self.is_possible_movement(self.__currPiecePosX, self.__currPiecePosY + 1, self.__currPieceId, self.__currPieceRotation):
+                        self.__currPiecePosY += 1
                         should_update_main_display = True
                 elif event == ControlsEvent.BTN_UP_PRESSED:
                     # Rotate the piece independently
-                    next_rotation = (self.mRotation + 1) % 4
-                    if self.is_possible_movement(self.mPosX, self.mPosY, self.mPiece, next_rotation):
-                        self.mRotation = next_rotation
+                    next_rotation = (self.__currPieceRotation + 1) % 4
+                    if self.is_possible_movement(self.__currPiecePosX, self.__currPiecePosY, self.__currPieceId, next_rotation):
+                        self.__currPieceRotation = next_rotation
                         should_update_main_display = True
-                # elif event == ControlsEvent.BTN_A_PRESSED:
-                #     # Drop the piece down as far as possible
-                #     while self.is_possible_movement(self.mPosX, self.mPosY, self.mPiece, self.mRotation):
-                #         self.mPosY += 1
-                #     self.mPosY -= 1 # Step back to the valid position
-                    
-                #     self.store_piece(self.mPosX, self.mPosY, self.mPiece, self.mRotation)
-                #     self.delete_possible_lines()
-                #     if self.is_game_over():
-                #         # Reset board map
-                #         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
-                #         self.create_new_piece()
-                #     else:
-                #         self.create_new_piece()
 
-        if current_time - self.mTime1 > WAIT_TIME_S:
-            if self.is_possible_movement(self.mPosX, self.mPosY + 1, self.mPiece, self.mRotation):
-                self.mPosY += 1
-            else:
-                self.store_piece(self.mPosX, self.mPosY, self.mPiece, self.mRotation)
-                self.delete_possible_lines()
-                
-                if self.is_game_over():
-                    # Reset board map
-                    time.sleep(1)
-                    self.start_new_game()
-                else:
-                    self.create_new_piece()
+        if current_time - self.__pieceLastDropTime > PIECE_DROP_PERIOD_S:
+            self.__drop_the_piece()
                     
             should_update_main_display = True
-            self.mTime1 = current_time
+            self.__pieceLastDropTime = current_time
+        
+        if current_time - self.__pieceLastFastDownDropTime > PIECE_FAST_DOWN_PERIOD_S:
+            if ControlsState.BTN_DOWN_HOLD in self.__console.get_active_control_states():
+                self.__drop_the_piece()
+                    
+                should_update_main_display = True
+                self.__pieceLastFastDownDropTime = current_time
+            else:
+                self.__pieceLastFastDownDropTime = 0.0
         
         if should_update_main_display:
-            self.console.draw_main_display(self.render_board())
-            self.console.commit_displays()
+            self.__console.draw_main_display(self.render_board())
+            self.__console.commit_displays()
+
+    def __drop_the_piece(self):
+        if self.is_possible_movement(self.__currPiecePosX, self.__currPiecePosY + 1, self.__currPieceId, self.__currPieceRotation):
+            self.__currPiecePosY += 1
+        else:
+            self.store_piece(self.__currPiecePosX, self.__currPiecePosY, self.__currPieceId, self.__currPieceRotation)
+            self.delete_possible_lines()
+                
+            if self.is_game_over():
+                time.sleep(1)
+                self.start_new_game()
+            else:
+                self.create_new_piece()
             
     def deinit(self) -> None:
         print("TetrisCartridge deinitialized")
     
     def render_board(self) -> List[List[tuple]]:
-        print(f"mPosX: {self.mPosX}, mPosY: {self.mPosY}, mPiece: {self.mPiece}, mRotation: {self.mRotation}, mTime1: {self.mTime1}, mColor: {self.mColor}")
+        print(f"mPosX: {self.__currPiecePosX}, mPosY: {self.__currPiecePosY}, mPiece: {self.__currPieceId}, mRotation: {self.__currPieceRotation}, mTime1: {self.__pieceLastDropTime}, mColor: {self.__currPieceColor}")
         colored_board = [[block.get_color() for block in row] for row in self.__board]
-        PIECE_BLOCKS = 5
-        for i1, i2 in zip(range(self.mPosX, self.mPosX + PIECE_BLOCKS), range(PIECE_BLOCKS)):
-            for j1, j2 in zip(range(self.mPosY, self.mPosY + PIECE_BLOCKS), range(PIECE_BLOCKS)):
-                if PIECES[self.mPiece][self.mRotation][j2][i2] != 0:
+        for i1, i2 in zip(range(self.__currPiecePosX, self.__currPiecePosX + PIECE_BLOCKS), range(PIECE_BLOCKS)):
+            for j1, j2 in zip(range(self.__currPiecePosY, self.__currPiecePosY + PIECE_BLOCKS), range(PIECE_BLOCKS)):
+                if PIECES[self.__currPieceId][self.__currPieceRotation][j2][i2] != 0:
                     if 0 <= i1 < config.MAIN_MATRIX_WIDTH and 0 <= j1 < config.MAIN_MATRIX_HEIGHT:
-                        colored_board[j1][i1] = self.mColor
+                        colored_board[j1][i1] = self.__currPieceColor
         return colored_board

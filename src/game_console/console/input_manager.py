@@ -58,7 +58,11 @@ class InputManager:
         Returns:
             Set of currently active ControlsState
         """
-        pass
+        active_states = set()
+        for pin_id, control_state in config.BUTTON_GPIO_MAPPING.items():
+            if GPIO.input(pin_id) == GPIO.LOW:
+                active_states.add(control_state)
+        return active_states
     
     def translate_button_to_event(self, gpio_pin: int, pressed: bool) -> ControlsEvent:
         return control_state_to_event(config.BUTTON_GPIO_MAPPING.get(gpio_pin), pressed)

@@ -1,6 +1,8 @@
 from typing import List, Tuple
 import neopixel
 
+import config
+
 
 class LEDStrip:
     """Driver for LED strip"""
@@ -23,6 +25,8 @@ class LEDStrip:
             pixel_order='GRBW', 
             auto_write=False
         )
+
+        self.__strip.brightness = config.LED_BRIGHTNESS
 
         self.clear()
 
