@@ -18,6 +18,13 @@ class GameCartridge(ABC):
             game_console: Reference to the GameConsole instance
         """
         pass
+
+    @abstractmethod
+    def force_update(self) -> None:
+        """
+        Force the update of all displays, for example after game unpause.
+        """
+        pass
     
     @abstractmethod
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
