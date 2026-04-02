@@ -129,11 +129,11 @@ class TetrisCartridge(GameCartridge):
         self.__pieceLastDropTime = 0.0
         self.__pieceLastFastDownDropTime = 0.0
         self.__currPieceColor = (0,0,0)
-        self.lines_cleared_total = 0
-        self.level = 1
-        self.score = 0
-        self.high_score = 0
-        self.curr_drop_interval = 0
+        self.__lines_cleared_total = 0
+        self.__level = 1
+        self.__score = 0
+        self.__high_score = 0
+        self.__curr_drop_interval = 0
     
     def init(self, game_console: 'GameConsole') -> None:
         self.__console = game_console
@@ -150,13 +150,13 @@ class TetrisCartridge(GameCartridge):
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         self.__pieceLastDropTime = 0.0
-        self.lines_cleared_total = 0
-        self.level = 1
-        self.score = 0
+        self.__lines_cleared_total = 0
+        self.__level = 1
+        self.__score = 0
         self.__pieceLastFastDownDropTime = 0.0
         self.__console.play_music()
         self.create_new_piece()
-        self.curr_drop_interval = BASE_DROP_INTERVAL_S
+        self.__curr_drop_interval = BASE_DROP_INTERVAL_S
 
     def create_new_piece(self) -> None:
         self.__currPieceId = random.randrange(len(PIECES))
@@ -235,17 +235,17 @@ class TetrisCartridge(GameCartridge):
         return removed
 
     def _recalculate_level(self) -> None:
-        self.level = 1 + (self.lines_cleared_total // LINES_PER_LEVEL)
-        self.curr_drop_interval = max(
+        self.__level = 1 + (self.__lines_cleared_total // LINES_PER_LEVEL)
+        self.__curr_drop_interval = max(
             MIN_DROP_INTERVAL_S,
-            BASE_DROP_INTERVAL_S * (SPEED_FACTOR_PER_LEVEL ** (self.level - 1))
+            BASE_DROP_INTERVAL_S * (SPEED_FACTOR_PER_LEVEL ** (self.__level - 1))
         )
 
     def _add_score_for_line_clear(self, cleared_lines: int) -> None:
         table = {1: 40, 2: 100, 3: 300, 4: 1200}
-        self.score += table.get(cleared_lines, 1200) * self.level
-        if self.score > self.high_score:
-            self.high_score = self.score
+        self.__score += table.get(cleared_lines, 1200) * self.__level
+        if self.__score > self.__high_score:
+            self.__high_score = self.__score
 
     def _score_for_4digit_display(self, value: int) -> int:
         return min(value, 9999)
@@ -307,7 +307,7 @@ class TetrisCartridge(GameCartridge):
             self.__PIECE_FALLING_SOUND.play()
             cleared = self.delete_possible_lines()
             if cleared > 0:
-                self.lines_cleared_total += cleared
+                self.__lines_cleared_total += cleared
                 self._recalculate_level()
                 self._add_score_for_line_clear(cleared)
                 
