@@ -5,6 +5,7 @@ from console.controls import ControlsState, ControlsEvent
 from cartridges.base_cartridge import GameCartridge
 from console.input_manager import InputManager
 from console.led_strip import LEDStrip
+from console.seven_segment import SevenSegment
 import pygame
 
 
@@ -18,6 +19,7 @@ class GameConsole:
         """Initializes the game console."""
         self.__input_manager = InputManager()
         self.__led_strip = LEDStrip(config.LED_STRIP_LEN, config.LED_STRIP_PIN)
+        self.__seven_segment = SevenSegment()
         self.__game_cartridge = None
         pygame.mixer.init(channels=1)
     
@@ -26,6 +28,7 @@ class GameConsole:
         if not self.__game_cartridge:
             return None
         try:
+            self.set_segment_display_text("helo")
             while True:
                 controls_update = self.__input_manager.poll_inputs()
                 self.__game_cartridge.tick(time.perf_counter(), controls_update)
@@ -38,7 +41,7 @@ class GameConsole:
     def clear_all(self) -> None:
         """Clear all displays."""
         self.__led_strip.clear()
-        pass
+        self.__seven_segment.clear()
 
     def __rgb_matrix_to_linear(self, rgbll: List[List[tuple]]) -> List[tuple]:
         if not rgbll:
@@ -62,6 +65,7 @@ class GameConsole:
     
     def commit_displays(self) -> None:
         self.__led_strip.show()
+        self.__seven_segment.show()
     
     def draw_main_display(self, rgbll: List[List[tuple]]) -> None:
         """
@@ -70,15 +74,7 @@ class GameConsole:
         Args:
             rgbll: 2D list of RGB tuples representing the 10x20 matrix
         """
-        print("will draw this:")
-        for row in rgbll:
-            print(''.join('.' if rgb == (0, 0, 0) else 'X' for rgb in row))
-        print()
         self.__draw_strip(self.__rgb_matrix_to_linear(rgbll), config.MAIN_MATRIX_OFFSET)
-        print("did draw this:")
-        for row in rgbll:
-            print(''.join('.' if rgb == (0, 0, 0) else 'X' for rgb in row))
-        print()
     
     def draw_secondary_display(self, rgbll: List[List[tuple]]) -> None:
         """
@@ -95,14 +91,34 @@ class GameConsole:
     def fill_secondary_display(self, rgb) -> None:
         self.__led_strip.fill(config.SECONDARY_MATRIX_OFFSET, config.SECONDARY_MATRIX_PIX_COUNT, rgb)
     
-    def set_segment_display_text(self, text: str) -> None:
+    def set_segment_display_text(self, text: str, alighRight : bool = False) -> None:
         """
         Set text on a seven segment display.
         
+        Supported symbols: 0-9, A-F, '-', ' ', and degree ('deg' or '°').
+        
         Args:
-            text: Text to display
+            text: Text to display, max 4 chars
         """
-        pass
+        self.__seven_segment.print_string(text, alighRight)
+
+    def set_segment_display_colon(self, pattern) -> None:
+        """Set which colon/point indicators are illuminated on the seven-segment display.
+
+        Bit flags:
+            0x02: Centre colon
+            0x04: Left colon, lower dot
+            0x08: Left colon, upper dot
+            0x10: Decimal point (upper)
+
+        Args:
+            pattern (int): Integer bitfield specifying which indicators to light.
+
+        Example:
+            # Set the centre : and the left :
+            pattern = 0x02 | 0x04 | 0x08
+        """
+        self.__seven_segment.set_colon(pattern)
     
     def insert_cartridge(self, cartridge: GameCartridge) -> None:
         """
