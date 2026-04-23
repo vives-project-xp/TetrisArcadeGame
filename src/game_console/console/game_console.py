@@ -42,18 +42,21 @@ class GameConsole:
         self.__led_strip.clear()
         self.__seven_segment.clear()
 
-    def __rgb_matrix_to_linear(self, rgbll: List[List[tuple]]) -> List[tuple]:
+    def __rgb_matrix_to_linear(self, rgbll: List[List[tuple]], inverted: bool = False) -> List[tuple]:
         if not rgbll:
             return []
         width = len(rgbll[0])
         result = []
         # transform from top-left to bottom-left coordinates
-        rgbll.reverse()
+        if not inverted: 
+            rgbll.reverse()
         for i, row_rgbl in enumerate(rgbll):
             if width != len(row_rgbl):
                 raise ValueError("Inconsistent width of the arrays")
-            if i % 2 == 0:
-                # transform to zigzag
+            # transform to zigzag
+            if i % 2 == 0 and not inverted:
+                row_rgbl.reverse()
+            if i % 2 == 1 and inverted:
                 row_rgbl.reverse()
             result.extend(row_rgbl)
         return result
@@ -84,7 +87,7 @@ class GameConsole:
         """
         # for row in rgbll:
             # print("".join("X" if pixel else "." for pixel in row))
-        self.__draw_strip(self.__rgb_matrix_to_linear(rgbll), config.SECONDARY_MATRIX_OFFSET)
+        self.__draw_strip(self.__rgb_matrix_to_linear(rgbll, inverted = True), config.SECONDARY_MATRIX_OFFSET)
     
     def fill_main_display(self, rgb) -> None:
         self.__led_strip.fill(config.MAIN_MATRIX_OFFSET, config.MAIN_MATRIX_PIX_COUNT, rgb)
