@@ -149,9 +149,10 @@ class TetrisCartridge(GameCartridge):
         self.__ROTATE_PIECE_SOUND = self.__console.load_sound("rotate_piece.wav")
         self.__GAME_OVER_SOUND = self.__console.load_sound("tetris_game_over.mp3")
         print("TetrisCartridge initialized")
-        self.__start_new_game()
+        # TODO later here do not start new game but initiate some idle animations
+        self.start_new_game()
     
-    def __start_new_game(self) -> None:
+    def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         self.__pieceLastDropTime = 0.0
         self.__lines_cleared_total = 0
@@ -163,9 +164,11 @@ class TetrisCartridge(GameCartridge):
         self.__nextPieceRotation = random.randrange(4)
         self.__nextPieceColor = random.choice(COLORS)
 
-        self.__console.play_music()
+        self.__console.replay_music()
         self.__create_new_piece()
         self.__curr_drop_interval = BASE_DROP_INTERVAL_S
+
+        self.__update_score_display()
 
     def __create_new_piece(self) -> None:
         self.__currPieceId = self.__nextPieceId
@@ -261,8 +264,8 @@ class TetrisCartridge(GameCartridge):
         if self.__score > self.__high_score:
             self.__high_score = self.__score
 
-    def __score_for_4digit_display(self, value: int) -> int:
-        return min(value, 9999)
+    def __score_for_4digit_display(self, value: int) -> str:
+        return str(min(value, 9999))
 
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
         # Initialize timer on the first tick
@@ -317,8 +320,8 @@ class TetrisCartridge(GameCartridge):
             self.__console.draw_secondary_display(self.__render_next_piece_display_contents())
 
         if should_update_score_display:
-            self.__console.set_segment_display_text(str(self.__score), True)
-        
+            self.__update_score_display()
+
         if should_update_main_display or should_update_score_display:
             self.__console.commit_displays()
 
@@ -338,7 +341,7 @@ class TetrisCartridge(GameCartridge):
                 self.__console.pause_music()
                 self.__GAME_OVER_SOUND.play()
                 time.sleep(3)
-                self.__start_new_game()
+                self.start_new_game()
             else:
                 self.__create_new_piece()
             
@@ -364,8 +367,12 @@ class TetrisCartridge(GameCartridge):
                     display[y][x] = self.__nextPieceColor
                     
         return display
+    
+    def __update_score_display(self) -> None:
+        self.__console.set_segment_display_text(self.__score_for_4digit_display(self.__score), True)
 
     def force_update(self) -> None:
         self.__console.draw_main_display(self.__render_main_display_contents())
         self.__console.draw_secondary_display(self.__render_next_piece_display_contents())
+        self.__update_score_display()
         self.__console.commit_displays()

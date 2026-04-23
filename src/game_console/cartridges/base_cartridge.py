@@ -27,6 +27,13 @@ class GameCartridge(ABC):
         pass
     
     @abstractmethod
+    def start_new_game(self) -> None:
+        """
+        Starts the game itself or restarts it in case it already runs.
+        """
+        pass
+    
+    @abstractmethod
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
         """
         Update game state for the current frame.
