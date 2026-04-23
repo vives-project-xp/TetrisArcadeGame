@@ -82,6 +82,8 @@ class GameConsole:
         Args:
             rgbll: 2D list of RGB tuples
         """
+        for row in rgbll:
+            print("".join("X" if pixel else "." for pixel in row))
         self.__draw_strip(self.__rgb_matrix_to_linear(rgbll), config.SECONDARY_MATRIX_OFFSET)
     
     def fill_main_display(self, rgb) -> None:
