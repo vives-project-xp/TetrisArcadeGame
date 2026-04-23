@@ -119,7 +119,7 @@ class GameConsole:
         """
         self.__seven_segment.set_colon(pattern)
     
-    def insert_cartridge(self, cartridge: GameCartridge) -> None:
+    def insert_cartridge(self, cartridge: GameCartridge | None) -> None:
         """
         Insert a game cartridge into the console.
         

@@ -58,12 +58,23 @@ class LEDStrip:
             self.__strip.deinit()
             self.__strip = None
 
-    def fill(self, color: Tuple[int, int, int]) -> None:
+    def fill(self, offset: int, len: int, color: Tuple[int, int, int]) -> None:
         """
-        Fill the LED strip with a colors.
+        Fill the LED strip with a color.
         
         Args:
+            offset: index of the starting pixel
+            len: length of the fill
             color: RGB tuple for each pixel
         """
-        if self.__strip:
-            self.__strip.fill(color)
+        if not self.__strip or len <= 0:
+            return
+
+        start = max(0, offset)
+        end = min(self.__length, offset + len)
+
+        if start >= end:
+            return
+
+        for i in range(start, end):
+            self.__strip[i] = color
