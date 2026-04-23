@@ -149,9 +149,10 @@ class TetrisCartridge(GameCartridge):
         self.__ROTATE_PIECE_SOUND = self.__console.load_sound("rotate_piece.wav")
         self.__GAME_OVER_SOUND = self.__console.load_sound("tetris_game_over.mp3")
         print("TetrisCartridge initialized")
-        self.__start_new_game()
+        # TODO later here do not start new game but initiate some idle animations
+        self.start_new_game()
     
-    def __start_new_game(self) -> None:
+    def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         self.__pieceLastDropTime = 0.0
         self.__lines_cleared_total = 0
@@ -163,7 +164,7 @@ class TetrisCartridge(GameCartridge):
         self.__nextPieceRotation = random.randrange(4)
         self.__nextPieceColor = random.choice(COLORS)
 
-        self.__console.play_music()
+        self.__console.replay_music()
         self.__create_new_piece()
         self.__curr_drop_interval = BASE_DROP_INTERVAL_S
 
@@ -340,7 +341,7 @@ class TetrisCartridge(GameCartridge):
                 self.__console.pause_music()
                 self.__GAME_OVER_SOUND.play()
                 time.sleep(3)
-                self.__start_new_game()
+                self.start_new_game()
             else:
                 self.__create_new_piece()
             

@@ -30,6 +30,8 @@ class GameConsole:
         try:
             while True:
                 controls_update = self.__input_manager.poll_inputs()
+                if ControlsEvent.BTN_START_RELEASED in controls_update:
+                    self.__game_cartridge.start_new_game()
                 self.__game_cartridge.tick(time.perf_counter(), controls_update)
                 time.sleep(config.FRAME_TIME)
         except KeyboardInterrupt:
@@ -85,8 +87,6 @@ class GameConsole:
         Args:
             rgbll: 2D list of RGB tuples
         """
-        # for row in rgbll:
-            # print("".join("X" if pixel else "." for pixel in row))
         self.__draw_strip(self.__rgb_matrix_to_linear(rgbll, inverted = True), config.SECONDARY_MATRIX_OFFSET)
     
     def fill_main_display(self, rgb) -> None:

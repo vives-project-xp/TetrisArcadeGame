@@ -26,6 +26,7 @@ SEVEN_SEGMENT_DIGITS = 4
 
 # GPIO pin mappings for physical buttons (BCM)
 BUTTON_GPIO_MAPPING = {
+    6: ControlsState.BTN_START_HOLD,
     13: ControlsState.BTN_UP_HOLD,
     19: ControlsState.BTN_DOWN_HOLD,
     26: ControlsState.BTN_LEFT_HOLD,
