@@ -1,6 +1,11 @@
 # TETRIS ARCADE GAME
 
-## Inhoudstafel
+[![VIVES Elektronica-ICT](https://img.shields.io/badge/VIVES-Bachelor_Electronica_–_ICT-blue?style=flat)](https://www.vives.be/nl/technology/elektronica-ict)
+[![Project Experience](https://img.shields.io/badge/VIVES-Project_Experience-green?style=flat)](https://github.com/vives-project-xp)
+[![GitHub](https://img.shields.io/github/stars/vives-project-xp/TetrisArcadeGame?style=social)](https://github.com/vives-project-xp/TetrisArcadeGame)
+[![TetrisArcadeGame contributors](https://img.shields.io/github/contributors/vives-project-xp/TetrisArcadeGame?style=social&logo=github)](https://github.com/vives-project-xp/TetrisArcadeGame/graphs/contributors)
+
+## Table of Contents
 - [Team](#Team)
 - [The assignment](#The-assignment)
 - [Posters](#Posters)
