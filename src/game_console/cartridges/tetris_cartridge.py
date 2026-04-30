@@ -1,3 +1,5 @@
+import time
+from enum import Enum, auto
 from typing import List, TYPE_CHECKING
 
 from cartridges.base_cartridge import GameCartridge
@@ -16,6 +18,10 @@ MIN_DROP_INTERVAL_S = 0.08
 SPEED_FACTOR_PER_LEVEL = 0.90
 LINES_PER_LEVEL = 10
 PIECE_FAST_DOWN_PERIOD_S = 0.1
+GAME_OVER_CURTAIN_STEP_S = 0.06
+GAME_OVER_FINAL_BLINK_S = 0.4
+OFF = (0, 0, 0)
+RED = (0xFF, 0x00, 0x00)
 
 def __rotate_piece(piece):
     """Rotate a piece 90 degrees clockwise."""
@@ -102,6 +108,11 @@ COLORS = [
     (0xff, 0xff, 0xff)
 ]
 
+class GameState(Enum):
+    WAITING_START = auto()
+    PLAYING = auto()
+    GAME_OVER = auto()
+
 class BoardBlock():
     def __init__(self):
         self.__state = None
@@ -122,7 +133,7 @@ class TetrisCartridge(GameCartridge):
     def __init__(self):
         self.__console = None
         self.__board = []
-        self.__game_started = False
+        self.__state = GameState.WAITING_START
         self.__currPiecePosX = 0
         self.__currPiecePosY = 0
         self.__currPieceId = 0
@@ -138,6 +149,8 @@ class TetrisCartridge(GameCartridge):
         self.__score = 0
         self.__high_score = 0
         self.__curr_drop_interval = 0
+        self.__game_over_started_at = 0.0
+        self.__game_over_render_state = None
     
     def init(self, game_console: 'GameConsole') -> None:
         self.__console = game_console
@@ -149,16 +162,19 @@ class TetrisCartridge(GameCartridge):
         self.__ROTATE_PIECE_SOUND = self.__console.load_sound("rotate_piece.wav")
         self.__GAME_OVER_SOUND = self.__console.load_sound("tetris_game_over.mp3")
         print("TetrisCartridge initialized")
-        self.__show_waiting_for_start_screen()
+        self.__state = GameState.WAITING_START
+        self.force_update()
     
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
-        self.__game_started = True
+        self.__state = GameState.PLAYING
         self.__pieceLastDropTime = 0.0
         self.__lines_cleared_total = 0
         self.__level = 1
         self.__score = 0
         self.__pieceLastFastDownDropTime = 0.0
+        self.__game_over_started_at = 0.0
+        self.__game_over_render_state = None
 
         self.__nextPieceId = random.randrange(len(PIECES))
         self.__nextPieceRotation = random.randrange(4)
@@ -268,7 +284,11 @@ class TetrisCartridge(GameCartridge):
         return str(min(value, 9999))
 
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
-        if not self.__game_started:
+        if self.__state == GameState.WAITING_START:
+            return
+
+        if self.__state == GameState.GAME_OVER:
+            self.__tick_game_over(current_time)
             return
 
         # Initialize timer on the first tick
@@ -292,7 +312,7 @@ class TetrisCartridge(GameCartridge):
                 elif event == ControlsEvent.BTN_DOWN_PRESSED:
                     # Drop piece down immediately
                     if self.__is_possible_movement(self.__currPiecePosX, self.__currPiecePosY + 1, self.__currPieceId, self.__currPieceRotation):
-                        self.__drop_the_piece()
+                        self.__drop_the_piece(current_time)
                         should_update_main_display = True
                 elif event == ControlsEvent.BTN_UP_PRESSED:
                     # Rotate the piece independently
@@ -303,18 +323,21 @@ class TetrisCartridge(GameCartridge):
                         self.__ROTATE_PIECE_SOUND.play()
 
         if current_time - self.__pieceLastDropTime > self.__curr_drop_interval:
-            self.__drop_the_piece()
+            self.__drop_the_piece(current_time)
             should_update_main_display = True
             self.__pieceLastDropTime = current_time
         
         if current_time - self.__pieceLastFastDownDropTime > PIECE_FAST_DOWN_PERIOD_S:
             if ControlsState.BTN_DOWN_HOLD in self.__console.get_active_control_states():
-                self.__drop_the_piece()
+                self.__drop_the_piece(current_time)
                     
                 should_update_main_display = True
                 self.__pieceLastFastDownDropTime = current_time
             else:
                 self.__pieceLastFastDownDropTime = 0.0
+
+        if self.__state != GameState.PLAYING:
+            return
 
         should_update_score_display = score_at_tick_start != self.__score
         
@@ -328,7 +351,7 @@ class TetrisCartridge(GameCartridge):
         if should_update_main_display or should_update_score_display:
             self.__console.commit_displays()
 
-    def __drop_the_piece(self):
+    def __drop_the_piece(self, current_time: float) -> None:
         if self.__is_possible_movement(self.__currPiecePosX, self.__currPiecePosY + 1, self.__currPieceId, self.__currPieceRotation):
             self.__currPiecePosY += 1
         else:
@@ -341,9 +364,7 @@ class TetrisCartridge(GameCartridge):
                 self.__add_score_for_line_clear(cleared)
                 
             if self.__is_game_over():
-                self.__game_started = False
-                self.__console.pause_music()
-                self.__GAME_OVER_SOUND.play()
+                self.__enter_game_over_state(current_time)
             else:
                 self.__create_new_piece()
             
@@ -374,13 +395,106 @@ class TetrisCartridge(GameCartridge):
         self.__console.set_segment_display_text(self.__score_for_4digit_display(self.__score), True)
 
     def force_update(self) -> None:
-        self.__console.draw_main_display(self.__render_main_display_contents())
-        self.__console.draw_secondary_display(self.__render_next_piece_display_contents())
-        self.__update_score_display()
+        if self.__state == GameState.WAITING_START:
+            self.__console.fill_main_display(OFF)
+            self.__console.fill_secondary_display(OFF)
+            self.__console.set_segment_display_text("----")
+        elif self.__state == GameState.GAME_OVER:
+            self.__draw_game_over_displays(time.perf_counter())
+        else:
+            self.__console.draw_main_display(self.__render_main_display_contents())
+            self.__console.draw_secondary_display(self.__render_next_piece_display_contents())
+            self.__update_score_display()
         self.__console.commit_displays()
 
-    def __show_waiting_for_start_screen(self) -> None:
-        self.__console.fill_main_display((0, 0, 0))
-        self.__console.fill_secondary_display((0, 0, 0))
-        self.__console.set_segment_display_text("----")
+    def __enter_game_over_state(self, current_time: float) -> None:
+        self.__state = GameState.GAME_OVER
+        self.__game_over_started_at = current_time
+        self.__game_over_render_state = None
+        self.__console.pause_music()
+        self.__GAME_OVER_SOUND.play()
+        self.__draw_game_over_displays(current_time)
         self.__console.commit_displays()
+
+    def __tick_game_over(self, current_time: float) -> None:
+        render_state = self.__get_game_over_render_state(current_time)
+        if render_state == self.__game_over_render_state:
+            return
+
+        self.__draw_game_over_displays(current_time)
+        self.__console.commit_displays()
+
+    def __get_game_over_render_state(self, current_time: float) -> tuple[str, int]:
+        elapsed = max(0.0, current_time - self.__game_over_started_at)
+        curtain_rows = int(elapsed / GAME_OVER_CURTAIN_STEP_S) + 1
+        if curtain_rows <= config.MAIN_MATRIX_HEIGHT:
+            return ("curtain", curtain_rows)
+        blink_visible = int((elapsed - (config.MAIN_MATRIX_HEIGHT * GAME_OVER_CURTAIN_STEP_S)) / GAME_OVER_FINAL_BLINK_S) % 2 == 0
+        return ("final", 1 if blink_visible else 0)
+
+    def __draw_game_over_displays(self, current_time: float) -> None:
+        render_state = self.__get_game_over_render_state(current_time)
+        self.__game_over_render_state = render_state
+        self.__console.draw_main_display(self.__render_game_over_main_display(render_state))
+        self.__console.draw_secondary_display(self.__render_game_over_secondary_display(render_state))
+        self.__update_score_display()
+
+    def __render_game_over_main_display(self, render_state: tuple[str, int]) -> List[List[tuple]]:
+        mode, value = render_state
+        if mode == "curtain":
+            return [
+                [RED if row_index < value else OFF for _ in range(config.MAIN_MATRIX_WIDTH)]
+                for row_index in range(config.MAIN_MATRIX_HEIGHT)
+            ]
+        if not value:
+            return [
+                [OFF for _ in range(config.MAIN_MATRIX_WIDTH)]
+                for _ in range(config.MAIN_MATRIX_HEIGHT)
+            ]
+
+        pattern = [
+            "..........",
+            "..........",
+            "..........",
+            ".###..###.",
+            ".###..###.",
+            "#.....#...",
+            "#.....#...",
+            "#.....#...",
+            "#.....#...",
+            "#.##..#.##",
+            "#.##..#.##",
+            "#..#..#..#",
+            "#..#..#..#",
+            "#..#..#..#",
+            "#..#..#..#",
+            ".###..###.",
+            ".###..###.",
+            "..........",
+            "..........",
+            "..........",
+        ]
+        return [
+            [RED if cell == "#" else OFF for cell in row]
+            for row in pattern
+        ]
+
+    def __render_game_over_secondary_display(self, render_state: tuple[str, int]) -> List[List[tuple]]:
+        mode, value = render_state
+        if mode == "curtain":
+            return [
+                [RED if row_index < min(value, config.SECONDARY_MATRIX_HEIGHT) else OFF for _ in range(config.SECONDARY_MATRIX_WIDTH)]
+                for row_index in range(config.SECONDARY_MATRIX_HEIGHT)
+            ]
+
+        pattern = [
+            "#...#",
+            ".#.#.",
+            "..#..",
+            ".#.#.",
+            "#...#",
+        ]
+        return [
+            [RED if cell == "#" else OFF for cell in row]
+            for row in pattern
+        ]
