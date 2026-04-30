@@ -1,4 +1,3 @@
-import time
 from typing import List, TYPE_CHECKING
 
 from cartridges.base_cartridge import GameCartridge
@@ -123,6 +122,7 @@ class TetrisCartridge(GameCartridge):
     def __init__(self):
         self.__console = None
         self.__board = []
+        self.__game_started = False
         self.__currPiecePosX = 0
         self.__currPiecePosY = 0
         self.__currPieceId = 0
@@ -149,11 +149,11 @@ class TetrisCartridge(GameCartridge):
         self.__ROTATE_PIECE_SOUND = self.__console.load_sound("rotate_piece.wav")
         self.__GAME_OVER_SOUND = self.__console.load_sound("tetris_game_over.mp3")
         print("TetrisCartridge initialized")
-        # TODO later here do not start new game but initiate some idle animations
-        self.start_new_game()
+        self.__show_waiting_for_start_screen()
     
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
+        self.__game_started = True
         self.__pieceLastDropTime = 0.0
         self.__lines_cleared_total = 0
         self.__level = 1
@@ -168,7 +168,7 @@ class TetrisCartridge(GameCartridge):
         self.__create_new_piece()
         self.__curr_drop_interval = BASE_DROP_INTERVAL_S
 
-        self.__update_score_display()
+        self.force_update()
 
     def __create_new_piece(self) -> None:
         self.__currPieceId = self.__nextPieceId
@@ -268,6 +268,9 @@ class TetrisCartridge(GameCartridge):
         return str(min(value, 9999))
 
     def tick(self, current_time: float, controls_events: List['ControlsEvent']) -> None:
+        if not self.__game_started:
+            return
+
         # Initialize timer on the first tick
         if self.__pieceLastDropTime == 0.0:
             self.__pieceLastDropTime = current_time
@@ -338,10 +341,9 @@ class TetrisCartridge(GameCartridge):
                 self.__add_score_for_line_clear(cleared)
                 
             if self.__is_game_over():
+                self.__game_started = False
                 self.__console.pause_music()
                 self.__GAME_OVER_SOUND.play()
-                time.sleep(3)
-                self.start_new_game()
             else:
                 self.__create_new_piece()
             
@@ -375,4 +377,10 @@ class TetrisCartridge(GameCartridge):
         self.__console.draw_main_display(self.__render_main_display_contents())
         self.__console.draw_secondary_display(self.__render_next_piece_display_contents())
         self.__update_score_display()
+        self.__console.commit_displays()
+
+    def __show_waiting_for_start_screen(self) -> None:
+        self.__console.fill_main_display((0, 0, 0))
+        self.__console.fill_secondary_display((0, 0, 0))
+        self.__console.set_segment_display_text("----")
         self.__console.commit_displays()
