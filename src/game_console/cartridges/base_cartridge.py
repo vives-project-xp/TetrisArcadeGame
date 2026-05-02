@@ -50,3 +50,9 @@ class GameCartridge(ABC):
         Clean up resources when removing the cartridge.
         """
         pass
+
+    def can_enter_screensaver(self) -> bool:
+        """
+        Returns whether the console may switch to screensaver mode right now.
+        """
+        return True

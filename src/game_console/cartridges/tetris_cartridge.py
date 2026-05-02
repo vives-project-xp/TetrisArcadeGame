@@ -370,6 +370,9 @@ class TetrisCartridge(GameCartridge):
             
     def deinit(self) -> None:
         print("TetrisCartridge deinitialized")
+
+    def can_enter_screensaver(self) -> bool:
+        return self.__state != GameState.PLAYING
     
     def __render_main_display_contents(self) -> List[List[tuple]]:
         # print(f"mPosX: {self.__currPiecePosX}, mPosY: {self.__currPiecePosY}, mPiece: {self.__currPieceId}, mRotation: {self.__currPieceRotation}, mTime1: {self.__pieceLastDropTime}, mColor: {self.__currPieceColor}")

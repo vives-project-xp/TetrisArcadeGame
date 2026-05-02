@@ -20,6 +20,11 @@ except ImportError:
 import config
 from cartridges.tetris_cartridge import TetrisCartridge
 from console.controls import ControlsEvent, ControlsState
+from console.screensaver import (
+    render_screensaver_main_display,
+    render_screensaver_secondary_display,
+    render_screensaver_segment_text,
+)
 
 
 KEY_EVENT_MAP = {
@@ -66,6 +71,7 @@ class FakeSound:
 
 class FakeConsole:
     def __init__(self) -> None:
+        self.cartridge = None
         self.main_display = self._blank_display(
             config.MAIN_MATRIX_HEIGHT,
             config.MAIN_MATRIX_WIDTH,
@@ -79,12 +85,22 @@ class FakeConsole:
         self.music_paused = False
         self.last_sound_played = None
         self.active_states: Set[ControlsState] = set()
+        self.last_input_time = time.perf_counter()
+        self.screensaver_active = False
 
     def _blank_display(self, height: int, width: int) -> List[List[tuple[int, int, int]]]:
         return [[(0, 0, 0) for _ in range(width)] for _ in range(height)]
 
     def insert_cartridge(self, cartridge) -> None:
+        self.cartridge = cartridge
+        self.screensaver_active = False
+        self.last_input_time = time.perf_counter()
         cartridge.init(self)
+
+    def clear_all(self) -> None:
+        self.fill_main_display((0, 0, 0))
+        self.fill_secondary_display((0, 0, 0))
+        self.set_segment_display_text("    ")
 
     def draw_main_display(self, rgbll: List[List[tuple[int, int, int]]]) -> None:
         self.main_display = [row[:] for row in rgbll]
@@ -112,6 +128,7 @@ class FakeConsole:
 
     def commit_displays(self) -> None:
         sys.stdout.write("\x1b[2J\x1b[H")
+        sys.stdout.write(f"Mode: {'screensaver' if self.screensaver_active else 'cartridge'}\n")
         sys.stdout.write(f"Score: {self.segment_text}\n")
         sys.stdout.write(
             f"Music: {self.music_title or '-'}"
@@ -140,9 +157,34 @@ class FakeConsole:
         for row in rgbll:
             chars = []
             for rgb in row:
-                chars.append(COLOR_TO_CHAR.get(rgb, "." if rgb == (0, 0, 0) else "#"))
+                chars.append(self._rgb_to_char(rgb))
             lines.append("".join(chars))
         return lines
+
+    "for terminal display"
+    def _rgb_to_char(self, rgb: tuple[int, int, int]) -> str:
+        if rgb == (0, 0, 0):
+            return "."
+
+        red, green, blue = rgb
+        brightest = max(rgb)
+        darkest = min(rgb)
+
+        if brightest < 35:
+            return "."
+        if brightest - darkest < 35:
+            return "W" if brightest > 160 else "+"
+        if abs(red - green) < 40 and red > blue:
+            return "Y"
+        if abs(red - blue) < 40 and red > green:
+            return "M"
+        if abs(green - blue) < 40 and green > red:
+            return "C"
+        if brightest == red:
+            return "R"
+        if brightest == green:
+            return "G"
+        return "B"
 
     def get_active_control_states(self) -> Set[ControlsState]:
         return set(self.active_states)
@@ -162,6 +204,60 @@ class FakeConsole:
     def set_music_volume(self, volume: float) -> None:
         return None
 
+    def run(self) -> None:
+        if not self.cartridge:
+            return
+
+        try:
+            while True:
+                current_time = time.perf_counter()
+                controls_update, should_quit = poll_terminal_events()
+                if should_quit:
+                    break
+
+                if controls_update:
+                    self.last_input_time = current_time
+                    if self.screensaver_active:
+                        self._deactivate_screensaver()
+                        time.sleep(config.FRAME_TIME)
+                        continue
+
+                if self.screensaver_active:
+                    self._draw_screensaver_frame(current_time)
+                    self.commit_displays()
+                    time.sleep(config.FRAME_TIME)
+                    continue
+
+                if self._should_activate_screensaver(current_time):
+                    self.screensaver_active = True
+                    self._draw_screensaver_frame(current_time)
+                    self.commit_displays()
+                    time.sleep(config.FRAME_TIME)
+                    continue
+
+                if ControlsEvent.BTN_START_RELEASED in controls_update:
+                    self.cartridge.start_new_game()
+
+                self.cartridge.tick(current_time, controls_update)
+                time.sleep(config.FRAME_TIME)
+        except KeyboardInterrupt:
+            pass
+
+    def _should_activate_screensaver(self, current_time: float) -> bool:
+        if not self.cartridge or not self.cartridge.can_enter_screensaver():
+            return False
+        return (current_time - self.last_input_time) >= config.SCREENSAVER_TIMEOUT_S
+
+    def _deactivate_screensaver(self) -> None:
+        self.screensaver_active = False
+        self.clear_all()
+        if self.cartridge:
+            self.cartridge.force_update()
+
+    def _draw_screensaver_frame(self, current_time: float) -> None:
+        self.draw_main_display(render_screensaver_main_display(current_time))
+        self.draw_secondary_display(render_screensaver_secondary_display(current_time))
+        self.set_segment_display_text(render_screensaver_segment_text(current_time))
 
 def poll_terminal_events() -> tuple[List[ControlsEvent], bool]:
     events: List[ControlsEvent] = []
@@ -186,22 +282,8 @@ def poll_terminal_events() -> tuple[List[ControlsEvent], bool]:
 
 def main() -> None:
     console = FakeConsole()
-    cartridge = TetrisCartridge()
-    console.insert_cartridge(cartridge)
-
-    try:
-        while True:
-            controls_update, should_quit = poll_terminal_events()
-            if should_quit:
-                break
-
-            if ControlsEvent.BTN_START_RELEASED in controls_update:
-                cartridge.start_new_game()
-
-            cartridge.tick(time.perf_counter(), controls_update)
-            time.sleep(config.FRAME_TIME)
-    except KeyboardInterrupt:
-        pass
+    console.insert_cartridge(TetrisCartridge())
+    console.run()
 
 
 if __name__ == "__main__":

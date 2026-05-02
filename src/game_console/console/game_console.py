@@ -6,6 +6,11 @@ from cartridges.base_cartridge import GameCartridge
 from console.input_manager import InputManager
 from console.led_strip import LEDStrip
 from console.seven_segment import SevenSegment
+from console.screensaver import (
+    render_screensaver_main_display,
+    render_screensaver_secondary_display,
+    render_screensaver_segment_text,
+)
 import pygame
 
 
@@ -21,6 +26,8 @@ class GameConsole:
         self.__led_strip = LEDStrip(config.LED_STRIP_LEN, config.LED_STRIP_PIN)
         self.__seven_segment = SevenSegment()
         self.__game_cartridge = None
+        self.__last_input_time = time.perf_counter()
+        self.__screensaver_active = False
         pygame.mixer.init(channels=1)
     
     def run(self):
@@ -29,10 +36,31 @@ class GameConsole:
             return None
         try:
             while True:
+                current_time = time.perf_counter()
                 controls_update = self.__input_manager.poll_inputs()
+                if controls_update:
+                    self.__last_input_time = current_time
+                    if self.__screensaver_active:
+                        self.__deactivate_screensaver()
+                        time.sleep(config.FRAME_TIME)
+                        continue
+
+                if self.__screensaver_active:
+                    self.__draw_screensaver_frame(current_time)
+                    self.commit_displays()
+                    time.sleep(config.FRAME_TIME)
+                    continue
+
+                if self.__should_activate_screensaver(current_time):
+                    self.__screensaver_active = True
+                    self.__draw_screensaver_frame(current_time)
+                    self.commit_displays()
+                    time.sleep(config.FRAME_TIME)
+                    continue
+
                 if ControlsEvent.BTN_START_RELEASED in controls_update:
                     self.__game_cartridge.start_new_game()
-                self.__game_cartridge.tick(time.perf_counter(), controls_update)
+                self.__game_cartridge.tick(current_time, controls_update)
                 time.sleep(config.FRAME_TIME)
         except KeyboardInterrupt:
             self.insert_cartridge(None)
@@ -133,6 +161,9 @@ class GameConsole:
         """
         if self.__game_cartridge:
             self.__game_cartridge.deinit()
+        self.__game_cartridge = None
+        self.__screensaver_active = False
+        self.__last_input_time = time.perf_counter()
         self.clear_all()
         if cartridge:
             self.__game_cartridge = cartridge
@@ -202,3 +233,19 @@ class GameConsole:
     def pause(self) -> None:
         """Pause the game console."""
         pass
+
+    def __should_activate_screensaver(self, current_time: float) -> bool:
+        if not self.__game_cartridge or not self.__game_cartridge.can_enter_screensaver():
+            return False
+        return (current_time - self.__last_input_time) >= config.SCREENSAVER_TIMEOUT_S
+
+    def __deactivate_screensaver(self) -> None:
+        self.__screensaver_active = False
+        self.clear_all()
+        if self.__game_cartridge:
+            self.__game_cartridge.force_update()
+
+    def __draw_screensaver_frame(self, current_time: float) -> None:
+        self.draw_main_display(render_screensaver_main_display(current_time))
+        self.draw_secondary_display(render_screensaver_secondary_display(current_time))
+        self.set_segment_display_text(render_screensaver_segment_text(current_time))
