@@ -87,6 +87,7 @@ class FakeConsole:
         self.active_states: Set[ControlsState] = set()
         self.last_input_time = time.perf_counter()
         self.screensaver_active = False
+        self.screensaver_started_at = 0.0
 
     def _blank_display(self, height: int, width: int) -> List[List[tuple[int, int, int]]]:
         return [[(0, 0, 0) for _ in range(width)] for _ in range(height)]
@@ -94,6 +95,7 @@ class FakeConsole:
     def insert_cartridge(self, cartridge) -> None:
         self.cartridge = cartridge
         self.screensaver_active = False
+        self.screensaver_started_at = 0.0
         self.last_input_time = time.perf_counter()
         cartridge.init(self)
 
@@ -217,6 +219,7 @@ class FakeConsole:
 
                 if force_screensaver and self.cartridge and self.cartridge.can_enter_screensaver():
                     self.screensaver_active = True
+                    self.screensaver_started_at = current_time
                     self._draw_screensaver_frame(current_time)
                     self.commit_displays()
                     time.sleep(config.FRAME_TIME)
@@ -237,6 +240,7 @@ class FakeConsole:
 
                 if self._should_activate_screensaver(current_time):
                     self.screensaver_active = True
+                    self.screensaver_started_at = current_time
                     self._draw_screensaver_frame(current_time)
                     self.commit_displays()
                     time.sleep(config.FRAME_TIME)
@@ -257,14 +261,16 @@ class FakeConsole:
 
     def _deactivate_screensaver(self) -> None:
         self.screensaver_active = False
+        self.screensaver_started_at = 0.0
         self.clear_all()
         if self.cartridge:
             self.cartridge.force_update()
 
     def _draw_screensaver_frame(self, current_time: float) -> None:
-        self.draw_main_display(render_screensaver_main_display(current_time))
-        self.draw_secondary_display(render_screensaver_secondary_display(current_time))
-        self.set_segment_display_text(render_screensaver_segment_text(current_time))
+        elapsed = max(0.0, current_time - self.screensaver_started_at)
+        self.draw_main_display(render_screensaver_main_display(elapsed))
+        self.draw_secondary_display(render_screensaver_secondary_display(elapsed))
+        self.set_segment_display_text(render_screensaver_segment_text(elapsed))
 
 def poll_terminal_events() -> tuple[List[ControlsEvent], bool, bool]:
     events: List[ControlsEvent] = []

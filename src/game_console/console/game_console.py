@@ -28,6 +28,7 @@ class GameConsole:
         self.__game_cartridge = None
         self.__last_input_time = time.perf_counter()
         self.__screensaver_active = False
+        self.__screensaver_started_at = 0.0
         pygame.mixer.init(channels=1)
     
     def run(self):
@@ -53,6 +54,7 @@ class GameConsole:
 
                 if self.__should_activate_screensaver(current_time):
                     self.__screensaver_active = True
+                    self.__screensaver_started_at = current_time
                     self.__draw_screensaver_frame(current_time)
                     self.commit_displays()
                     time.sleep(config.FRAME_TIME)
@@ -163,6 +165,7 @@ class GameConsole:
             self.__game_cartridge.deinit()
         self.__game_cartridge = None
         self.__screensaver_active = False
+        self.__screensaver_started_at = 0.0
         self.__last_input_time = time.perf_counter()
         self.clear_all()
         if cartridge:
@@ -241,11 +244,13 @@ class GameConsole:
 
     def __deactivate_screensaver(self) -> None:
         self.__screensaver_active = False
+        self.__screensaver_started_at = 0.0
         self.clear_all()
         if self.__game_cartridge:
             self.__game_cartridge.force_update()
 
     def __draw_screensaver_frame(self, current_time: float) -> None:
-        self.draw_main_display(render_screensaver_main_display(current_time))
-        self.draw_secondary_display(render_screensaver_secondary_display(current_time))
-        self.set_segment_display_text(render_screensaver_segment_text(current_time))
+        elapsed = max(0.0, current_time - self.__screensaver_started_at)
+        self.draw_main_display(render_screensaver_main_display(elapsed))
+        self.draw_secondary_display(render_screensaver_secondary_display(elapsed))
+        self.set_segment_display_text(render_screensaver_segment_text(elapsed))

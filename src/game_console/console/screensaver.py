@@ -5,14 +5,12 @@ import config
 from cartridges.tetris_cartridge import COLORS, PIECES, PIECE_BLOCKS
 
 OFF = (0, 0, 0)
-FALLING_PIECES = (
-    {"row_offset": 0, "piece_offset": 0},
-    {"row_offset": 10, "piece_offset": 2},
-    {"row_offset": 20, "piece_offset": 4},
+MAIN_LANES = (
+    {"center_x": 2, "start_delay_s": 0.0, "piece_offset": 0},
+    {"center_x": 7, "start_delay_s": 0.45, "piece_offset": 3},
 )
-MAIN_LANE_X = config.MAIN_MATRIX_WIDTH // 2
-MAIN_FALL_SPEED = 4.0
-VERTICAL_SPACING_ROWS = 4
+MAIN_SPAWN_SPACING_ROWS = 5
+MAIN_FALL_SPEED = 5.2
 PREVIEW_CHANGE_INTERVAL_S = 2.0
 
 
@@ -60,31 +58,45 @@ def _draw_piece(
                 display[draw_y][draw_x] = color
 
 
-def _falling_piece_state(current_time: float, piece_index: int) -> tuple[int, int, int, int, int]:
-    piece_config = FALLING_PIECES[piece_index]
-    travel_rows = config.MAIN_MATRIX_HEIGHT + PIECE_BLOCKS + VERTICAL_SPACING_ROWS
-    cycle_progress_rows = (current_time * MAIN_FALL_SPEED + piece_config["row_offset"]) % travel_rows
-    cycle_index = int((current_time * MAIN_FALL_SPEED + piece_config["row_offset"]) / travel_rows)
+def _falling_piece_state(
+    current_time: float,
+    lane_index: int,
+    spawn_index: int,
+) -> tuple[int, int, int, int, int]:
+    lane = MAIN_LANES[lane_index]
+    elapsed_for_lane = max(0.0, current_time - float(lane["start_delay_s"]))
+    progress_rows = elapsed_for_lane * MAIN_FALL_SPEED
+    top_left_y = math.floor(progress_rows - (spawn_index * MAIN_SPAWN_SPACING_ROWS)) - PIECE_BLOCKS
 
-    piece_id = (cycle_index + piece_config["piece_offset"]) % len(PIECES)
-    rotation = (cycle_index + piece_index) % 4
-    color_index = (cycle_index + piece_config["piece_offset"]) % len(COLORS)
-    top_left_y = math.floor(cycle_progress_rows) - PIECE_BLOCKS
+    piece_id = (spawn_index + int(lane["piece_offset"])) % len(PIECES)
+    rotation = (spawn_index + lane_index) % 4
+    color_index = (spawn_index + int(lane["piece_offset"]) + lane_index) % len(COLORS)
 
     piece = PIECES[piece_id][rotation]
     min_x, max_x, _, _ = _piece_bounds(piece)
     piece_center_x = (min_x + max_x) // 2
-    top_left_x = MAIN_LANE_X - piece_center_x
+    top_left_x = int(lane["center_x"]) - piece_center_x
 
     return piece_id, rotation, color_index, top_left_x, top_left_y
 
 
 def render_screensaver_main_display(current_time: float) -> List[List[tuple[int, int, int]]]:
     display = _empty_display(config.MAIN_MATRIX_WIDTH, config.MAIN_MATRIX_HEIGHT)
+    visible_drop_count = (config.MAIN_MATRIX_HEIGHT // MAIN_SPAWN_SPACING_ROWS) + 3
 
-    for piece_index in range(len(FALLING_PIECES)):
-        piece_id, rotation, color_index, top_left_x, top_left_y = _falling_piece_state(current_time, piece_index)
-        _draw_piece(display, piece_id, rotation, top_left_x, top_left_y, COLORS[color_index])
+    for lane_index in range(len(MAIN_LANES)):
+        lane = MAIN_LANES[lane_index]
+        elapsed_for_lane = max(0.0, current_time - float(lane["start_delay_s"]))
+        latest_spawn_index = int((elapsed_for_lane * MAIN_FALL_SPEED) / MAIN_SPAWN_SPACING_ROWS)
+        first_spawn_index = max(0, latest_spawn_index - visible_drop_count)
+
+        for spawn_index in range(first_spawn_index, latest_spawn_index + 1):
+            piece_id, rotation, color_index, top_left_x, top_left_y = _falling_piece_state(
+                current_time,
+                lane_index,
+                spawn_index,
+            )
+            _draw_piece(display, piece_id, rotation, top_left_x, top_left_y, COLORS[color_index])
 
     return display
 
