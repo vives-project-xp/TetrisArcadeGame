@@ -5,11 +5,14 @@ import config
 from cartridges.tetris_cartridge import COLORS, PIECES, PIECE_BLOCKS
 
 OFF = (0, 0, 0)
-MAIN_STREAMS = (
-    {"lane_x": 1, "speed": 4.2, "time_offset": 0.0, "piece_offset": 0},
-    {"lane_x": 4, "speed": 3.6, "time_offset": 1.7, "piece_offset": 2},
-    {"lane_x": 7, "speed": 4.8, "time_offset": 3.1, "piece_offset": 4},
+FALLING_PIECES = (
+    {"row_offset": 0, "piece_offset": 0},
+    {"row_offset": 10, "piece_offset": 2},
+    {"row_offset": 20, "piece_offset": 4},
 )
+MAIN_LANE_X = config.MAIN_MATRIX_WIDTH // 2
+MAIN_FALL_SPEED = 4.0
+VERTICAL_SPACING_ROWS = 4
 PREVIEW_CHANGE_INTERVAL_S = 2.0
 
 
@@ -57,23 +60,21 @@ def _draw_piece(
                 display[draw_y][draw_x] = color
 
 
-def _stream_piece_state(current_time: float, stream_index: int) -> tuple[int, int, int, int, int]:
-    stream = MAIN_STREAMS[stream_index]
-    travel_rows = config.MAIN_MATRIX_HEIGHT + PIECE_BLOCKS + 2
-    cycle_duration = travel_rows / stream["speed"]
-    stream_time = current_time + stream["time_offset"]
-    cycle_index = int(stream_time / cycle_duration)
-    cycle_progress = stream_time % cycle_duration
+def _falling_piece_state(current_time: float, piece_index: int) -> tuple[int, int, int, int, int]:
+    piece_config = FALLING_PIECES[piece_index]
+    travel_rows = config.MAIN_MATRIX_HEIGHT + PIECE_BLOCKS + VERTICAL_SPACING_ROWS
+    cycle_progress_rows = (current_time * MAIN_FALL_SPEED + piece_config["row_offset"]) % travel_rows
+    cycle_index = int((current_time * MAIN_FALL_SPEED + piece_config["row_offset"]) / travel_rows)
 
-    piece_id = (cycle_index + stream["piece_offset"]) % len(PIECES)
-    rotation = (cycle_index + stream_index) % 4
-    color_index = (cycle_index + stream["piece_offset"]) % len(COLORS)
-    top_left_y = math.floor(cycle_progress * stream["speed"]) - PIECE_BLOCKS
+    piece_id = (cycle_index + piece_config["piece_offset"]) % len(PIECES)
+    rotation = (cycle_index + piece_index) % 4
+    color_index = (cycle_index + piece_config["piece_offset"]) % len(COLORS)
+    top_left_y = math.floor(cycle_progress_rows) - PIECE_BLOCKS
 
     piece = PIECES[piece_id][rotation]
     min_x, max_x, _, _ = _piece_bounds(piece)
     piece_center_x = (min_x + max_x) // 2
-    top_left_x = stream["lane_x"] - piece_center_x
+    top_left_x = MAIN_LANE_X - piece_center_x
 
     return piece_id, rotation, color_index, top_left_x, top_left_y
 
@@ -81,8 +82,8 @@ def _stream_piece_state(current_time: float, stream_index: int) -> tuple[int, in
 def render_screensaver_main_display(current_time: float) -> List[List[tuple[int, int, int]]]:
     display = _empty_display(config.MAIN_MATRIX_WIDTH, config.MAIN_MATRIX_HEIGHT)
 
-    for stream_index in range(len(MAIN_STREAMS)):
-        piece_id, rotation, color_index, top_left_x, top_left_y = _stream_piece_state(current_time, stream_index)
+    for piece_index in range(len(FALLING_PIECES)):
+        piece_id, rotation, color_index, top_left_x, top_left_y = _falling_piece_state(current_time, piece_index)
         _draw_piece(display, piece_id, rotation, top_left_x, top_left_y, COLORS[color_index])
 
     return display
