@@ -138,7 +138,7 @@ class FakeConsole:
             sys.stdout.write(f"Last sound: {self.last_sound_played}\n")
         else:
             sys.stdout.write("Last sound: -\n")
-        sys.stdout.write("Controls: A/D left-right, S down, W rotate, SPACE start, Q quit\n")
+        sys.stdout.write("Controls: A/D left-right, S down, W rotate, SPACE start, T screensaver, Q quit\n")
         sys.stdout.write("\n")
 
         main_lines = self._display_to_lines(self.main_display)
@@ -211,9 +211,16 @@ class FakeConsole:
         try:
             while True:
                 current_time = time.perf_counter()
-                controls_update, should_quit = poll_terminal_events()
+                controls_update, should_quit, force_screensaver = poll_terminal_events()
                 if should_quit:
                     break
+
+                if force_screensaver and self.cartridge and self.cartridge.can_enter_screensaver():
+                    self.screensaver_active = True
+                    self._draw_screensaver_frame(current_time)
+                    self.commit_displays()
+                    time.sleep(config.FRAME_TIME)
+                    continue
 
                 if controls_update:
                     self.last_input_time = current_time
@@ -259,9 +266,10 @@ class FakeConsole:
         self.draw_secondary_display(render_screensaver_secondary_display(current_time))
         self.set_segment_display_text(render_screensaver_segment_text(current_time))
 
-def poll_terminal_events() -> tuple[List[ControlsEvent], bool]:
+def poll_terminal_events() -> tuple[List[ControlsEvent], bool, bool]:
     events: List[ControlsEvent] = []
     should_quit = False
+    force_screensaver = False
 
     while msvcrt.kbhit():
         key = msvcrt.getwch()
@@ -275,9 +283,13 @@ def poll_terminal_events() -> tuple[List[ControlsEvent], bool]:
             should_quit = True
             continue
 
+        if key in ("t", "T"):
+            force_screensaver = True
+            continue
+
         events.extend(KEY_EVENT_MAP.get(key, []))
 
-    return events, should_quit
+    return events, should_quit, force_screensaver
 
 
 def main() -> None:
