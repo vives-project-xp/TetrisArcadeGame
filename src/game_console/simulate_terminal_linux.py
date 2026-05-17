@@ -15,6 +15,7 @@ except ImportError:
     board.SDA = "SDA"
     sys.modules["board"] = board
 
+from cartridges.pong_cartridge import PongCartridge
 from cartridges.tetris_cartridge import TetrisCartridge
 import config
 from cartridges.snake_cartridge import SnakeCartridge
@@ -120,6 +121,9 @@ class FakeConsole:
         if alighRight:
             rendered = rendered.rjust(config.SEVEN_SEGMENT_DIGITS)
         self.segment_text = rendered[:config.SEVEN_SEGMENT_DIGITS]
+
+    def set_segment_display_colon(self, pattern) -> None:
+        pass
 
     def commit_displays(self) -> None:
         sys.stdout.write("\x1b[2J\x1b[H")
@@ -306,7 +310,7 @@ def poll_terminal_events() -> tuple[List[ControlsEvent], bool, bool]:
 
 def main() -> None:
     console = FakeConsole()
-    console.insert_cartridge(SnakeCartridge())
+    console.insert_cartridge(PongCartridge())
     console.run()
 
 

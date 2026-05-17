@@ -13,9 +13,9 @@ BALL_COLOR = (255, 255, 255)
 P1_COLOR = (0, 255, 255)
 P2_COLOR = (255, 0, 255)
 SPEED_INDICATOR_COLOR = (255, 165, 0)
-PADDLE_SIZE = 3
+PADDLE_SIZE = 4
 
-INITIAL_INTERVAL = 0.2
+INITIAL_INTERVAL = 0.5
 INTERVAL_DECREMENT = 0.01
 MIN_INTERVAL = 0.05
 
@@ -88,17 +88,16 @@ class PongCartridge(GameCartridge):
         active_states = self.__console.get_active_control_states()
         
         # P1 uses LEFT (up) and DOWN (down)
-        # However, to be more logical: Y=0 is bottom, Y=19 is top. Let's say UP is +y, DOWN is -y.
         if ControlsState.BTN_LEFT_HOLD in active_states:
-            self.__p1_y = min(config.MAIN_MATRIX_HEIGHT - PADDLE_SIZE, self.__p1_y + 1)
-        if ControlsState.BTN_DOWN_HOLD in active_states:
             self.__p1_y = max(0, self.__p1_y - 1)
+        if ControlsState.BTN_DOWN_HOLD in active_states:
+            self.__p1_y = min(config.MAIN_MATRIX_HEIGHT - PADDLE_SIZE, self.__p1_y + 1)
 
         # P2 uses UP (up) and RIGHT (down)
         if ControlsState.BTN_UP_HOLD in active_states:
-            self.__p2_y = min(config.MAIN_MATRIX_HEIGHT - PADDLE_SIZE, self.__p2_y + 1)
-        if ControlsState.BTN_RIGHT_HOLD in active_states:
             self.__p2_y = max(0, self.__p2_y - 1)
+        if ControlsState.BTN_RIGHT_HOLD in active_states:
+            self.__p2_y = min(config.MAIN_MATRIX_HEIGHT - PADDLE_SIZE, self.__p2_y + 1)
 
         if current_time - self.__last_move_time >= self.__interval:
             self.__ball_x += self.__ball_dx
