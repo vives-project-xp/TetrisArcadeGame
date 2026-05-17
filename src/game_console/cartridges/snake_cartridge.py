@@ -22,6 +22,7 @@ class Direction(Enum):
     RIGHT = auto()
 
 WRAP_EDGES = True
+STARTING_LENGTH = 2
 STARTING_SPEED = 0.4
 SPEED_INCREMENT = 0.02
 MIN_SPEED = 0.05
@@ -48,7 +49,9 @@ class SnakeCartridge(GameCartridge):
         self.force_update()
 
     def start_new_game(self) -> None:
-        self.__snake = [(config.MAIN_MATRIX_WIDTH // 2, config.MAIN_MATRIX_HEIGHT // 2)]
+        center_x = config.MAIN_MATRIX_WIDTH // 2
+        center_y = config.MAIN_MATRIX_HEIGHT // 2
+        self.__snake = [(center_x, center_y + i) for i in range(STARTING_LENGTH)]
         self.__dir = Direction.UP
         self.__next_dir = Direction.UP
         self.__spawn_apple()
@@ -91,9 +94,9 @@ class SnakeCartridge(GameCartridge):
             head_x, head_y = self.__snake[0]
             
             if self.__dir == Direction.UP:
-                head_y += 1
-            elif self.__dir == Direction.DOWN:
                 head_y -= 1
+            elif self.__dir == Direction.DOWN:
+                head_y += 1
             elif self.__dir == Direction.LEFT:
                 head_x -= 1
             elif self.__dir == Direction.RIGHT:
