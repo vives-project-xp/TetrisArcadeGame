@@ -50,6 +50,7 @@ class GameConsole:
                     self.__last_input_time = current_time
                     if self.__screensaver_active:
                         self.__deactivate_screensaver()
+                        self.__game_cartridge.start_new_game()
                         time.sleep(config.FRAME_TIME)
                         continue
 
