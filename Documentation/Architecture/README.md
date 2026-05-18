@@ -19,4 +19,4 @@ The electrical diagram and the LED diagram belong together. The electrical diagr
 
 ## UML Diagrams
 
-<img src = "Images/UMLDiagram.png" height="auto" width="750">
+<img src = "Images/class diagram.png" height="auto" width="750">
