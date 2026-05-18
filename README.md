@@ -19,19 +19,17 @@
 - [<img src="https://github.com/ondrejkozel.png" alt="" width="25" style="margin-bottom:-6px;">Ondřej Kozel](https://github.com/ondrejkozel)
 
 ## The assignment
-The project involves the design and realization of a physical Tetris arcade within a custom-built housing. The classic game is displayed on a grid-based LED game board, where each individual LED represents a single block of the game. The arcade is designed to be versatile, allowing it to be mounted on a wall or, ideally, stand autonomously on a table.
+The project involves the design and realization of an interactive Tetris arcade game within a custom-built housing. The classic game is visualized in real time on an LED game board, which features a scoreboard and a 'next block' display. A Raspberry Pi forms the core of the system, processing input from the physical control buttons while driving both the LED matrix and the speaker. The arcade game is designed for versatility, allowing it to be either wall-mounted or stand autonomously on a table.
 
 ## Posters
 <div style="display: flex; gap: 10px;">
-   <img src="Documentation/Posters/Tetris%20Arcade%20game%20poster.png" height="auto" width="350">
-   <img src="Documentation/Posters/Tetris%20Arcade%20game%20poster%20EN.png" width="350">
+   <img src="Documentation/Posters/New%20Version/Tetris%20Arcade%20game%20poster.png" height="auto" width="350">
+   <img src="Documentation/Posters/New%20Version/Tetris%20Arcade%20game%20poster%20EN.png" width="350">
 </div>
 
 ## Folder structure
-- [3d-prints](./3d-prints/readme.md) : Here you will find the files for 3d-print.
 - [Documentation](./Documentation/README.md) : Here you will find everything about the documentation.
-- [Housing](./Housing/README.md) : Here you will will find everything about the housing.
-- [Lasercutting](./Lasercutting/README.md) : Here you will find the files for lasercutting.
+- [Housing](./Housing/README.md) : Here you will will find everything about the housing and lasercutting.
 - [Setup](./Autostartscript.md) : Here you will find a readme how you can do auto start for the program.
 - [Social Media](./Social%20Media) : Here you will find the pictures and video's for social media.
 - [src](./src) : Here you will find everthing off the code.
