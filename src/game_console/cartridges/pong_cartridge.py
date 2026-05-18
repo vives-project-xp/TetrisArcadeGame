@@ -15,9 +15,10 @@ P2_COLOR = (255, 0, 255)
 SPEED_INDICATOR_COLOR = (255, 165, 0)
 PADDLE_SIZE = 4
 
-INITIAL_INTERVAL = 0.5
-INTERVAL_DECREMENT = 0.01
-MIN_INTERVAL = 0.05
+INITIAL_INTERVAL_S = 0.5
+INTERVAL_DECREMENT_S = 0.02
+MIN_INTERVAL_S = 0.05
+BREAK_BETWEEN_GAMES_S = 3
 
 class GameState(Enum):
     WAITING_START = auto()
@@ -36,7 +37,7 @@ class PongCartridge(GameCartridge):
         self.__ball_dy = 1
         self.__p1_score = 0
         self.__p2_score = 0
-        self.__interval = INITIAL_INTERVAL
+        self.__interval = INITIAL_INTERVAL_S
         self.__last_move_time = 0.0
         self.__scored_time = 0.0
 
@@ -46,7 +47,8 @@ class PongCartridge(GameCartridge):
         self.__PEEEEEP_SOUND = self.__console.load_sound("ping_pong_8bit_peeeeeep.ogg")
         self.__PLOP_SOUND = self.__console.load_sound("ping_pong_8bit_plop.ogg")
         self.__state = GameState.WAITING_START
-        self.force_update()
+        print("PongCartridge initialized")
+        self.start_new_game()
 
     def start_new_game(self) -> None:
         self.__p1_score = 0
@@ -62,7 +64,7 @@ class PongCartridge(GameCartridge):
         self.__ball_y = config.MAIN_MATRIX_HEIGHT // 2
         self.__ball_dx = 1 if (self.__p1_score + self.__p2_score) % 2 == 0 else -1
         self.__ball_dy = 1
-        self.__interval = INITIAL_INTERVAL
+        self.__interval = INITIAL_INTERVAL_S
         self.__last_move_time = time.perf_counter()
         self.__BEEP_SOUND.play()
 
@@ -76,7 +78,7 @@ class PongCartridge(GameCartridge):
             return
 
         if self.__state == GameState.SCORED:
-            if current_time - self.__scored_time > 2.0:
+            if current_time - self.__scored_time > BREAK_BETWEEN_GAMES_S:
                 self.__reset_round()
                 self.__state = GameState.PLAYING
             else:
@@ -114,15 +116,15 @@ class PongCartridge(GameCartridge):
                 self.__PLOP_SOUND.play()
 
             # P1 Paddle collision (left side)
-            if self.__ball_x == 1 and self.__p1_y <= self.__ball_y < self.__p1_y + PADDLE_SIZE:
+            if self.__ball_x == 1 and self.__p1_y - 1 <= self.__ball_y < self.__p1_y + PADDLE_SIZE + 1:
                 self.__ball_dx = 1
-                self.__interval = max(MIN_INTERVAL, self.__interval - INTERVAL_DECREMENT)
+                self.__interval = max(MIN_INTERVAL_S, self.__interval - INTERVAL_DECREMENT_S)
                 self.__PLOP_SOUND.play()
                 
             # P2 Paddle collision (right side)
-            elif self.__ball_x == config.MAIN_MATRIX_WIDTH - 2 and self.__p2_y <= self.__ball_y < self.__p2_y + PADDLE_SIZE:
+            elif self.__ball_x == config.MAIN_MATRIX_WIDTH - 2 and self.__p2_y - 1 <= self.__ball_y < self.__p2_y + PADDLE_SIZE + 1:
                 self.__ball_dx = -1
-                self.__interval = max(MIN_INTERVAL, self.__interval - INTERVAL_DECREMENT)
+                self.__interval = max(MIN_INTERVAL_S, self.__interval - INTERVAL_DECREMENT_S)
                 self.__PLOP_SOUND.play()
 
             # Score conditions
@@ -144,6 +146,10 @@ class PongCartridge(GameCartridge):
 
     def __render_board(self) -> None:
         board = [[(0, 0, 0) for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
+
+        # Draw ball
+        if 0 <= self.__ball_y < config.MAIN_MATRIX_HEIGHT and 0 <= self.__ball_x < config.MAIN_MATRIX_WIDTH:
+            board[self.__ball_y][self.__ball_x] = BALL_COLOR
         
         # Draw P1 Paddle
         for i in range(PADDLE_SIZE):
@@ -154,10 +160,6 @@ class PongCartridge(GameCartridge):
         for i in range(PADDLE_SIZE):
             if 0 <= self.__p2_y + i < config.MAIN_MATRIX_HEIGHT:
                 board[self.__p2_y + i][config.MAIN_MATRIX_WIDTH - 1] = P2_COLOR
-
-        # Draw ball
-        if 0 <= self.__ball_y < config.MAIN_MATRIX_HEIGHT and 0 <= self.__ball_x < config.MAIN_MATRIX_WIDTH:
-            board[self.__ball_y][self.__ball_x] = BALL_COLOR
 
         self.__console.draw_main_display(board)
 
@@ -174,7 +176,7 @@ class PongCartridge(GameCartridge):
         else:
             glow = 0.5 + 0.5 * math.sin(current_time * 5)
             
-        speed_fraction = 1.0 - (self.__interval - MIN_INTERVAL) / (INITIAL_INTERVAL - MIN_INTERVAL)
+        speed_fraction = 1.0 - (self.__interval - MIN_INTERVAL_S) / (INITIAL_INTERVAL_S - MIN_INTERVAL_S)
         speed_fraction = max(0.0, min(1.0, speed_fraction))
         
         h = 1.0 + speed_fraction * (config.SECONDARY_MATRIX_HEIGHT - 1.0)
@@ -190,7 +192,7 @@ class PongCartridge(GameCartridge):
                 
             c = (int(color[0] * brightness * glow), int(color[1] * brightness * glow), int(color[2] * brightness * glow))
             for x in range(config.SECONDARY_MATRIX_WIDTH):
-                board[y][x] = c
+                board[config.SECONDARY_MATRIX_HEIGHT - y - 1][x] = c
                 
         self.__console.draw_secondary_display(board)
 
@@ -201,3 +203,4 @@ class PongCartridge(GameCartridge):
 
     def deinit(self) -> None:
         self.__console.set_segment_display_colon(0x00) # Reset colon
+        print("PongCartridge deinitialized")

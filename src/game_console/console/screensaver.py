@@ -70,7 +70,7 @@ def _falling_piece_state(
 
     piece_id = (spawn_index + int(lane["piece_offset"])) % len(PIECES)
     rotation = (spawn_index + lane_index) % 4
-    color_index = (spawn_index + int(lane["piece_offset"]) + lane_index) % len(COLORS)
+    color_index = piece_id
 
     piece = PIECES[piece_id][rotation]
     min_x, max_x, _, _ = _piece_bounds(piece)
@@ -106,7 +106,7 @@ def render_screensaver_secondary_display(current_time: float) -> List[List[tuple
     preview_index = int(current_time / PREVIEW_CHANGE_INTERVAL_S)
     piece_id = preview_index % len(PIECES)
     rotation = preview_index % 4
-    color = COLORS[preview_index % len(COLORS)]
+    color = COLORS[piece_id]
 
     _draw_piece(display, piece_id, rotation, 0, 0, color)
     return display

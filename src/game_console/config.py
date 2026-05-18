@@ -5,7 +5,7 @@ import board
 # Game loop settings
 TARGET_FPS = 30
 FRAME_TIME = 1.0 / TARGET_FPS
-SCREENSAVER_TIMEOUT_S = 5.0
+SCREENSAVER_TIMEOUT_S = 20.0
 
 # LED Display settings
 MAIN_MATRIX_WIDTH = 10
