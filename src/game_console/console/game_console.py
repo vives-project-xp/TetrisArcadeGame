@@ -31,7 +31,7 @@ class GameConsole:
         self.__screensaver_started_at = 0.0
         self.__game_cartridge_index = 0
         self.__available_cartridges = []
-        pygame.mixer.init(channels=1)
+        pygame.mixer.init(channels=1, buffer=4096)
         
     def set_available_cartridges(self, cartridges: List[type]) -> None:
         self.__available_cartridges = cartridges
@@ -71,16 +71,17 @@ class GameConsole:
                 if ControlsEvent.BTN_START_PRESSED in controls_update:
                     start_btn_press_time = current_time
 
-                if ControlsEvent.BTN_START_RELEASED in controls_update:
-                    if start_btn_press_time > 0 and current_time - start_btn_press_time >= 1.5:
-                        if self.__available_cartridges:
-                            self.__game_cartridge_index = (self.__game_cartridge_index + 1) % len(self.__available_cartridges)
-                            self.insert_cartridge(self.__available_cartridges[self.__game_cartridge_index]())
-                            start_btn_press_time = 0.0
-                            continue
-                    else:
+                if start_btn_press_time > 0 and current_time - start_btn_press_time >= 0.5:
+                    if self.__available_cartridges:
                         self.__game_cartridge.start_new_game()
-                    start_btn_press_time = 0.0
+                        start_btn_press_time = 0.0
+                        continue
+
+                if ControlsEvent.BTN_START_RELEASED in controls_update:
+                    if start_btn_press_time > 0:
+                        self.__game_cartridge_index = (self.__game_cartridge_index + 1) % len(self.__available_cartridges)
+                        self.insert_cartridge(self.__available_cartridges[self.__game_cartridge_index]())
+                        start_btn_press_time = 0.0
                     
                 self.__game_cartridge.tick(current_time, controls_update)
                 time.sleep(config.FRAME_TIME)

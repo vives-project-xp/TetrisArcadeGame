@@ -155,15 +155,16 @@ class TetrisCartridge(GameCartridge):
     def init(self, game_console: 'GameConsole') -> None:
         self.__console = game_console
         self.__console.load_music("tetris_theme.mp3")
-        self.__console.set_music_volume(0.15)
+        self.__console.set_music_volume(0.25)
         self.__MOVE_PIECE_SOUND = self.__console.load_sound("move_piece.wav")
         self.__CLEAR_LINE_SOUND = self.__console.load_sound("clear_line.mp3")
         self.__PIECE_FALLING_SOUND = self.__console.load_sound("piece_falling.mp3")
         self.__ROTATE_PIECE_SOUND = self.__console.load_sound("rotate_piece.wav")
+        self.__ROTATE_PIECE_SOUND.set_volume(0.7)
         self.__GAME_OVER_SOUND = self.__console.load_sound("tetris_game_over.mp3")
-        print("TetrisCartridge initialized")
         self.__state = GameState.WAITING_START
-        self.force_update()
+        print("TetrisCartridge initialized")
+        self.start_new_game()
     
     def start_new_game(self) -> None:
         self.__board = [[BoardBlock() for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
@@ -178,7 +179,7 @@ class TetrisCartridge(GameCartridge):
 
         self.__nextPieceId = random.randrange(len(PIECES))
         self.__nextPieceRotation = random.randrange(4)
-        self.__nextPieceColor = random.choice(COLORS)
+        self.__nextPieceColor = COLORS[self.__nextPieceId]
 
         self.__console.replay_music()
         self.__create_new_piece()
@@ -193,7 +194,7 @@ class TetrisCartridge(GameCartridge):
 
         self.__nextPieceId = random.randrange(len(PIECES))
         self.__nextPieceRotation = random.randrange(4)
-        self.__nextPieceColor = random.choice(COLORS)
+        self.__nextPieceColor = COLORS[self.__nextPieceId]
 
         self.__currPiecePosX = (config.MAIN_MATRIX_WIDTH // 2) - 2 
         self.__currPiecePosY = -2
@@ -275,8 +276,10 @@ class TetrisCartridge(GameCartridge):
         )
 
     def __add_score_for_line_clear(self, cleared_lines: int) -> None:
-        table = {1: 40, 2: 100, 3: 300, 4: 1200}
-        self.__score += table.get(cleared_lines, 1200) * self.__level
+        # table = {1: 4, 2: 10, 3: 30, 4: 120}
+        # self.__score += table.get(cleared_lines, 120) * self.__level
+        table = {1: 2, 2: 5, 3: 15, 4: 60}
+        self.__score += table.get(cleared_lines, 60) * self.__level
         if self.__score > self.__high_score:
             self.__high_score = self.__score
 
@@ -369,6 +372,7 @@ class TetrisCartridge(GameCartridge):
                 self.__create_new_piece()
             
     def deinit(self) -> None:
+        self.__console.unload_music()
         print("TetrisCartridge deinitialized")
 
     def can_enter_screensaver(self) -> bool:

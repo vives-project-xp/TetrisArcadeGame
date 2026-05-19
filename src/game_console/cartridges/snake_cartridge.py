@@ -21,11 +21,16 @@ class Direction(Enum):
     LEFT = auto()
     RIGHT = auto()
 
-WRAP_EDGES = True
+SNAKE_HEAD = (0, 255, 0)
+SNAKE_BODY = (0, 255, 0)
+APPLE = (255, 0, 0)
+GLOW = (255, 0, 0)
+
+WRAP_EDGES = False
 STARTING_LENGTH = 2
-STARTING_SPEED = 0.4
-SPEED_INCREMENT = 0.02
-MIN_SPEED = 0.05
+STARTING_INTERVAL = 0.25
+INTERVAL_DECREMENT = 0.004
+MIN_INTERVAL = 0.13
 ANIMATION_DURATION = 1.0
 
 class SnakeCartridge(GameCartridge):
@@ -37,16 +42,20 @@ class SnakeCartridge(GameCartridge):
         self.__next_dir = Direction.UP
         self.__apple: Tuple[int, int] = (0, 0)
         self.__last_move_time = 0.0
-        self.__speed = STARTING_SPEED
+        self.__speed = STARTING_INTERVAL
         self.__animation_start_time = 0.0
         self.__is_animating_score = False
 
     def init(self, game_console: 'GameConsole') -> None:
         self.__console = game_console
+        self.__console.load_music("snake_theme.mp3")
+        self.__console.set_music_volume(0.6)
         self.__EAT_SOUND = self.__console.load_sound("snake_eat.ogg")
         self.__DIE_SOUND = self.__console.load_sound("snake_die.mp3")
+        self.__DIE_SOUND.set_volume(0.25)
         self.__state = GameState.WAITING_START
-        self.force_update()
+        print("SnakeCartridge initialized")
+        self.start_new_game()
 
     def start_new_game(self) -> None:
         center_x = config.MAIN_MATRIX_WIDTH // 2
@@ -56,10 +65,11 @@ class SnakeCartridge(GameCartridge):
         self.__next_dir = Direction.UP
         self.__spawn_apple()
         self.__state = GameState.PLAYING
-        self.__speed = STARTING_SPEED
+        self.__speed = STARTING_INTERVAL
         self.__last_move_time = time.perf_counter()
         self.__is_animating_score = False
         self.force_update()
+        self.__console.replay_music()
 
     def force_update(self) -> None:
         self.__render_board()
@@ -108,12 +118,14 @@ class SnakeCartridge(GameCartridge):
             else:
                 if head_x < 0 or head_x >= config.MAIN_MATRIX_WIDTH or head_y < 0 or head_y >= config.MAIN_MATRIX_HEIGHT:
                     self.__state = GameState.GAME_OVER
+                    self.__console.pause_music()
                     self.__DIE_SOUND.play()
                     return
 
             new_head = (head_x, head_y)
             if new_head in self.__snake:
                 self.__state = GameState.GAME_OVER
+                self.__console.pause_music()
                 self.__DIE_SOUND.play()
                 return
 
@@ -121,7 +133,7 @@ class SnakeCartridge(GameCartridge):
             if new_head == self.__apple:
                 self.__EAT_SOUND.play()
                 self.__spawn_apple()
-                self.__speed = max(MIN_SPEED, self.__speed - SPEED_INCREMENT)
+                self.__speed = max(MIN_INTERVAL, self.__speed - INTERVAL_DECREMENT)
                 self.__is_animating_score = True
                 self.__animation_start_time = current_time
             else:
@@ -141,7 +153,7 @@ class SnakeCartridge(GameCartridge):
                 self.__console.fill_secondary_display((0, 0, 0))
             else:
                 c = int(255 * (1 - (current_time - self.__animation_start_time) / ANIMATION_DURATION))
-                self.__console.fill_secondary_display((0, c, c))
+                self.__console.fill_secondary_display(tuple((ch * c) // 255 for ch in GLOW))
 
         self.__console.commit_displays()
 
@@ -156,20 +168,21 @@ class SnakeCartridge(GameCartridge):
     def __render_board(self) -> None:
         board = [[(0, 0, 0) for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         for i, (x, y) in enumerate(self.__snake):
-            color = (0, 255, 0) if i == 0 else (0, 200, 0)
+            color = SNAKE_HEAD if i == 0 else SNAKE_BODY
             board[y][x] = color
         self.__console.draw_main_display(board)
         
     def __render_apple(self, brightness: int) -> None:
         board = [[(0, 0, 0) for _ in range(config.MAIN_MATRIX_WIDTH)] for _ in range(config.MAIN_MATRIX_HEIGHT)]
         for i, (x, y) in enumerate(self.__snake):
-            color = (0, 255, 0) if i == 0 else (0, 200, 0)
+            color = SNAKE_HEAD if i == 0 else SNAKE_BODY
             board[y][x] = color
-        board[self.__apple[1]][self.__apple[0]] = (brightness, 0, 0)
+        board[self.__apple[1]][self.__apple[0]] = tuple((c * brightness) // 255 for c in APPLE)
         self.__console.draw_main_display(board)
 
     def __render_score(self) -> None:
         self.__console.set_segment_display_text(str(len(self.__snake)), True)
 
     def deinit(self) -> None:
-        pass
+        self.__console.unload_music()
+        print("SnakeCartridge deinitialized")
