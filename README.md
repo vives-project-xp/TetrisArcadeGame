@@ -5,6 +5,8 @@
 [![GitHub](https://img.shields.io/github/stars/vives-project-xp/TetrisArcadeGame?style=social)](https://github.com/vives-project-xp/TetrisArcadeGame)
 [![TetrisArcadeGame contributors](https://img.shields.io/github/contributors/vives-project-xp/TetrisArcadeGame?style=social&logo=github)](https://github.com/vives-project-xp/TetrisArcadeGame/graphs/contributors)
 
+<img src="Housing/Images/TetrisFrame.jpg" alt="Tetris Frame" height="650" width="250">
+
 ## Table of Contents
 - [Team](#team)
 - [Project Overview](#project-overview)
